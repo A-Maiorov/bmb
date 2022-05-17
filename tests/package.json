@@ -6,7 +6,7 @@
     "type": "module",
     "scripts": {
         "build": "node buildWorker.cjs",
-        "test": " wtr",
+        "test": "npm run build && wtr",
         "test:w": "wtr --watch"
     },
     "license": "MIT",

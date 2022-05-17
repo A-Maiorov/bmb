@@ -3,7 +3,7 @@ import { expect } from "@open-wc/testing";
 import { BMB } from "browser-message-broker";
 
 //this url is relative to browser
-var testWorker = new Worker("suit/WebWorker/testWorker.js");
+var testWorker = new Worker("suite/WebWorker/testWorker.js");
 
 interface testMsg {
   payload: string;
@@ -31,7 +31,7 @@ function setup() {
   };
 
   //Configure subscription to ask worker to send response
-  BMB.Subscribe(REQUEST_SUBSCRIPTION_KEY).broadcast();
+  BMB.Subscribe(REQUEST_SUBSCRIPTION_KEY).enableBroadcast();
 
   //Configure subscription to receive response message from worker
   BMB.Subscribe<testMsg>(RESPONSE_SUBSCRIPTION_KEY, (m) => {
@@ -40,7 +40,7 @@ function setup() {
       el.innerHTML = m.payload;
     }
     _resolveResponseReceived();
-  }).broadcast();
+  }).enableBroadcast();
 }
 
 export function test() {

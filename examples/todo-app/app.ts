@@ -1,46 +1,60 @@
+import { BMB, Subscription } from "browser-message-broker";
 import { html, LitElement } from "lit";
-import { customElement } from "lit/decorators.js";
-import { BMB } from "browser-message-broker";
-import { LitSubscriber } from "browser-message-broker/dist/LitSubscriber";
+import { customElement, query } from "lit/decorators.js";
+import { ITodo, ITodoErr, MESSAGES } from "./Messages";
+
+(async () => {
+  if ("SharedWorker" in window) {
+    try {
+      new SharedWorker("sharedWorker.js", {
+        name: "todo-app-worker",
+        credentials: "same-origin",
+      });
+    } catch (err) {
+      console.log("sharedWorker registration failed: ", err);
+    }
+  }
+})();
 
 @customElement("todo-app")
 export class TodoApp extends LitElement {
-  subs: LitSubscriber<MsgAddTodo>;
-
+  addTodoSubs: Subscription<Partial<ITodo>>;
   constructor() {
     super();
-    this.subs = new LitSubscriber<MsgAddTodo>(this, MsgAddTodo.name);
+    BMB.Subscribe<ITodoErr>(
+      MESSAGES.TODO_ERR,
+      (err) => {
+        console.log(err);
+      },
+      true
+    );
+    this.addTodoSubs = BMB.Subscribe<Partial<ITodo>>(
+      MESSAGES.ADD_TODO,
+      undefined,
+      true
+    );
   }
+
+  @query("#text")
+  txtInput?: HTMLInputElement;
 
   override render() {
     return html`
-      <div>Hello world! ${this.subs.state?.text}</div>
-      <todo-btn-add> </todo-btn-add>
+      <div>Hello this is what you need to do:</div>
+      <div>
+        <input type="text" id="text" />
+        <button @click=${this.addTodo}>Add</button>
+      </div>
     `;
   }
-}
 
-@customElement("todo-btn-add")
-export class AddTodoButton extends LitElement {
-  constructor() {
-    super();
-  }
-
-  override render() {
-    return html`
-      <button
-        @click=${() =>
-          BMB.Publish(MsgAddTodo.name, new MsgAddTodo("Go drink beer"))}
-      >
-        ADD TODO
-      </button>
-    `;
-  }
-}
-
-class MsgAddTodo {
-  text: string = "";
-  constructor(t: string) {
-    this.text = t;
+  addTodo() {
+    if (!this.txtInput) return;
+    const text = this.txtInput?.value;
+    if (!text || text === "") return;
+    console.log("publish addTodo");
+    this.addTodoSubs.publish({ text });
+    this.txtInput.value = "";
+    this.requestUpdate();
   }
 }

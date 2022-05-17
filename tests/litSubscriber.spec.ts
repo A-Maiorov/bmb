@@ -2,8 +2,9 @@ import { BMB } from "browser-message-broker";
 import {
   initialPayloadValue,
   TestElement,
-} from "./suit/LitElements/testElement";
+} from "./suite/LitElements/testElement";
 import { expect, fixture, html } from "@open-wc/testing";
+import { LitElement } from "lit";
 
 class TestMsg {
   public payload = "testmsg";
@@ -37,6 +38,7 @@ describe("Lit TestElement", () => {
       await BMB.Publish(TestMsg.name, msg);
 
       const el = await fixture(html`<test-element></test-element>`);
+
       expect(el).shadowDom.to.equal(`${initialPayloadValue}${msg.payload}`);
     });
   });

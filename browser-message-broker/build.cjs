@@ -14,11 +14,11 @@ esbuild
 
 esbuild
   .build({
-    entryPoints: ["src/LitSubscriber.ts"],
+    entryPoints: ["src/LitSubscriptionContorller.ts"],
     bundle: true,
     minify: true,
     sourcemap: true,
-    outfile: "dist/LitSubscriber.js",
+    outfile: "dist/LitSubscriptionContorller.js",
     target: "es2020",
     platform: "browser",
     format: "esm",

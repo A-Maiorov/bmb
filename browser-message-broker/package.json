@@ -5,7 +5,7 @@
     "main": "dist/Broker.js",
     "type": "module",
     "scripts": {
-        "build": "tsc && node build.cjs",
+        "build": "tsc && node build.cjs ",
         "test": "wtr",
         "test:w": "wtr --watch"
     },
