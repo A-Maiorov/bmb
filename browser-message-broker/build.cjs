@@ -1,4 +1,5 @@
 const esbuild = require("esbuild");
+
 esbuild
   .build({
     entryPoints: ["src/Broker.ts"],
