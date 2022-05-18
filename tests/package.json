@@ -15,7 +15,7 @@
         "lit": "2.2.3"
     },
     "devDependencies": {
-        "browser-message-broker": "workspace:*",
+        "browser-message-broker": "latest",
         "@esm-bundle/chai": "^4.3.4",
         "@open-wc/testing": "3.1.4",
         "@types/mocha": "^9.1.1",

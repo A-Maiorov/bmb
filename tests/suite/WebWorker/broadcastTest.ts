@@ -31,16 +31,20 @@ function setup() {
   };
 
   //Configure subscription to ask worker to send response
-  BMB.Subscribe(REQUEST_SUBSCRIPTION_KEY).enableBroadcast();
+  BMB.Subscribe(REQUEST_SUBSCRIPTION_KEY, undefined, true);
 
   //Configure subscription to receive response message from worker
-  BMB.Subscribe<testMsg>(RESPONSE_SUBSCRIPTION_KEY, (m) => {
-    const el = document.getElementById("test");
-    if (el) {
-      el.innerHTML = m.payload;
-    }
-    _resolveResponseReceived();
-  }).enableBroadcast();
+  BMB.Subscribe<testMsg>(
+    RESPONSE_SUBSCRIPTION_KEY,
+    (m) => {
+      const el = document.getElementById("test");
+      if (el) {
+        el.innerHTML = m.payload;
+      }
+      _resolveResponseReceived();
+    },
+    true
+  );
 }
 
 export function test() {

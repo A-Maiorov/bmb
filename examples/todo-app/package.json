@@ -16,7 +16,7 @@
     "dependencies": {
         "lit": "2.2.3",
         "idb": "7.0.1",
-        "browser-message-broker": "workspace:*"
+        "browser-message-broker": "latest"
     },
     "devDependencies": {
         "local-web-server": "5.2.0",
