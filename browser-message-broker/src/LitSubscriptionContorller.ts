@@ -1,5 +1,5 @@
-import { ReactiveController, ReactiveControllerHost } from "lit";
-import { IBroker, Subscription, THandler } from "./Types";
+import type { ReactiveController, ReactiveControllerHost } from "lit";
+import type { IBroker, Subscription, THandler } from "./Types";
 
 let BMB = globalThis.BrowserMessageBroker;
 

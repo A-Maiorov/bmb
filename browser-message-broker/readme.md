@@ -1,5 +1,5 @@
 # BMB - BrowserMessageBroker
-
+![Tests](https://github.com/A-Maiorov/bmb/actions/workflows/test.yml/badge.svg)
 > [!WARNING]
 > EXPERIMENTAL AND POORLY TESTED! Use on your own risk.
 
