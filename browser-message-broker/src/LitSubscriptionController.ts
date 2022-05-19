@@ -17,7 +17,7 @@ if (!BMB && globalThis.constructor.name === "Window") {
   globalThis.document.addEventListener("bmb-ready", handler);
 }
 
-export class SubscriptionContorller<T> implements ReactiveController {
+export class SubscriptionController<T> implements ReactiveController {
   private __host: ReactiveControllerHost;
   private __subsKey: string;
 

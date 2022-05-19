@@ -1,40 +1,40 @@
 import { css, html, LitElement } from "lit";
 import { customElement } from "lit/decorators.js";
 
-import { SubscriptionContorller } from "browser-message-broker/dist/LitSubscriptionContorller";
+import { SubscriptionController } from "browser-message-broker/dist/LitSubscriptionController";
 import { ITodo, MESSAGES } from "./Messages";
 import { BMB } from "browser-message-broker";
 
 @customElement("todo-list")
 export class TodoList extends LitElement {
-  allTodosCtl: SubscriptionContorller<ITodo[]>;
+  allTodosCtl: SubscriptionController<ITodo[]>;
 
-  completeSubCtl: SubscriptionContorller<ITodo>;
-  deleteSubCtl: SubscriptionContorller<ITodo>;
-  todoSelCtl: SubscriptionContorller<ITodo>;
+  completeSubCtl: SubscriptionController<ITodo>;
+  deleteSubCtl: SubscriptionController<ITodo>;
+  todoSelCtl: SubscriptionController<ITodo>;
 
   constructor() {
     super();
-    this.allTodosCtl = new SubscriptionContorller<ITodo[]>(
+    this.allTodosCtl = new SubscriptionController<ITodo[]>(
       this,
       MESSAGES.ALL_TODOS,
       true
     );
-    new SubscriptionContorller<ITodo>(
+    new SubscriptionController<ITodo>(
       this,
       MESSAGES.TODO_ADDED,
       true,
       false,
       this.handleTodoAdded.bind(this)
     );
-    new SubscriptionContorller<ITodo>(
+    new SubscriptionController<ITodo>(
       this,
       MESSAGES.TODO_MODIFIED,
       true,
       false,
       this.handleTodoModified.bind(this)
     );
-    new SubscriptionContorller<ITodo>(
+    new SubscriptionController<ITodo>(
       this,
       MESSAGES.TODO_DELETED,
       true,
@@ -42,20 +42,20 @@ export class TodoList extends LitElement {
       this.handleTodoDeleted.bind(this)
     );
 
-    this.completeSubCtl = new SubscriptionContorller<ITodo>(
+    this.completeSubCtl = new SubscriptionController<ITodo>(
       this,
       MESSAGES.COMPLETE_TODO,
       true
     );
 
-    this.deleteSubCtl = new SubscriptionContorller<ITodo>(
+    this.deleteSubCtl = new SubscriptionController<ITodo>(
       this,
       MESSAGES.DEL_TODO,
       true
     );
 
     // not broadcasted (limited to current context - Window)
-    this.todoSelCtl = new SubscriptionContorller<ITodo>(
+    this.todoSelCtl = new SubscriptionController<ITodo>(
       this,
       MESSAGES.TODO_SELECTED
     );

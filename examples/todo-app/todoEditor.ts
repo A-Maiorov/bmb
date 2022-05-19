@@ -1,29 +1,29 @@
 import { css, html, LitElement } from "lit";
 import { customElement, query } from "lit/decorators.js";
 import { IModifyTodo, ITodo, MESSAGES } from "./Messages";
-import { SubscriptionContorller } from "browser-message-broker/dist/LitSubscriptionContorller";
+import { SubscriptionController } from "browser-message-broker/dist/LitSubscriptionController";
 
 @customElement("todo-editor")
 export class TodoEditor extends LitElement {
-  todoSelectedCtl: SubscriptionContorller<ITodo>;
-  modifyTodoCtl: SubscriptionContorller<IModifyTodo>;
-  todoModifiedCtl: SubscriptionContorller<ITodo>;
+  todoSelectedCtl: SubscriptionController<ITodo>;
+  modifyTodoCtl: SubscriptionController<IModifyTodo>;
+  todoModifiedCtl: SubscriptionController<ITodo>;
 
   constructor() {
     super();
-    this.todoSelectedCtl = new SubscriptionContorller<ITodo>(
+    this.todoSelectedCtl = new SubscriptionController<ITodo>(
       this,
       MESSAGES.TODO_SELECTED,
       false,
       true
     );
-    this.modifyTodoCtl = new SubscriptionContorller<IModifyTodo>(
+    this.modifyTodoCtl = new SubscriptionController<IModifyTodo>(
       this,
       MESSAGES.MODIFY_TODO,
       true,
       false
     );
-    this.todoModifiedCtl = new SubscriptionContorller<ITodo>(
+    this.todoModifiedCtl = new SubscriptionController<ITodo>(
       this,
       MESSAGES.TODO_MODIFIED,
       true,

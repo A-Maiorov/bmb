@@ -12,7 +12,8 @@
     "license": "MIT",
     "private": true,
     "dependencies": {
-        "lit": "2.2.4"
+        "lit": "2.2.4",
+        "browser-message-broker": "latest"
     },
     "devDependencies": {
         "@esm-bundle/chai": "4.3.4",

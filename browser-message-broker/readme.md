@@ -1,6 +1,6 @@
 # BMB - BrowserMessageBroker
 
-> ⚠️ **EXPERIMENTAL AND POORLY TESTED!** Use on your own risk
+> ⚠️ **EXPERIMENTAL AND POORLY TESTED!** Use at your own risk
 
 ![Tests](https://github.com/A-Maiorov/bmb/actions/workflows/test.yml/badge.svg)
 [![Published on npm](https://img.shields.io/npm/v/browser-message-broker.svg?logo=npm)](https://www.npmjs.com/package/browser-message-broker)

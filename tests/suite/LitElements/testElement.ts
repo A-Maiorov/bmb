@@ -1,6 +1,6 @@
 import { html, LitElement } from "lit";
 import { customElement, property } from "lit/decorators.js";
-import { SubscriptionContorller } from "browser-message-broker/dist/LitSubscriptionContorller";
+import { SubscriptionController } from "browser-message-broker/dist/LitSubscriptionController";
 
 export const initialPayloadValue = "initial state";
 
@@ -10,7 +10,7 @@ class TestMsg {
 
 @customElement("test-element")
 export class TestElement extends LitElement {
-  ctl = new SubscriptionContorller<TestMsg>(this, TestMsg.name);
+  ctl = new SubscriptionController<TestMsg>(this, TestMsg.name);
 
   @property({ type: String })
   payload: string = initialPayloadValue;
