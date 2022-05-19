@@ -1,5 +1,5 @@
 import { BMB, Subscription } from "browser-message-broker";
-import { html, LitElement } from "lit";
+import { css, CSSResultGroup, html, LitElement } from "lit";
 import { customElement, query } from "lit/decorators.js";
 import { ITodo, ITodoErr, MESSAGES } from "./Messages";
 
@@ -41,11 +41,12 @@ export class TodoApp extends LitElement {
 
   override render() {
     return html`
-      <div>Hello this is what you need to do:</div>
       <div>
-        <input type="text" id="text" />
+        <input type="text" id="text" placeholder="Typoe here what to do" />
+
         <button @click=${this.addTodo}>Add</button>
       </div>
+      <i>Click existing todo text in order to change it</i>
     `;
   }
 
@@ -53,9 +54,20 @@ export class TodoApp extends LitElement {
     if (!this.txtInput) return;
     const text = this.txtInput?.value;
     if (!text || text === "") return;
-    console.log("publish addTodo");
     this.addTodoSubs.publish({ text });
     this.txtInput.value = "";
     this.requestUpdate();
   }
+
+  static override styles?: CSSResultGroup | undefined = css`
+    :host {
+      display: block;
+      margin: 10px 0px;
+    }
+
+    i {
+      font-size: small;
+      color: gray;
+    }
+  `;
 }

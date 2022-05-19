@@ -1,4 +1,4 @@
-import { html, LitElement } from "lit";
+import { css, html, LitElement } from "lit";
 import { customElement, query } from "lit/decorators.js";
 import { IModifyTodo, ITodo, MESSAGES } from "./Messages";
 import { SubscriptionContorller } from "browser-message-broker/dist/LitSubscriptionContorller";
@@ -64,4 +64,11 @@ export class TodoEditor extends LitElement {
       newText,
     });
   }
+
+  static override styles = css`
+    :host {
+      display: block;
+      margin: 10px 0px;
+    }
+  `;
 }

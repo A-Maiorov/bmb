@@ -94,46 +94,56 @@ export class TodoList extends LitElement {
   }
 
   override render() {
-    return html`<ul>
-      ${this.allTodosCtl.state?.map(
-        (todo) => html`
-          <li ?data-isDone=${todo.isDone}>
-            <button
-              @click=${() => {
-                this.completeSubCtl.subscription?.publish(todo);
-              }}
-              class="check"
-            >
-              ✔
-            </button>
-            <span
-              @click=${() => this.todoSelCtl.subscription?.publish(todo)}
-              class="text"
-              >${todo.text}</span
-            >
-            <button
-              @click=${() => {
-                this.deleteSubCtl.subscription?.publish(todo);
-              }}
-              class="delete"
-            >
-              ❌
-            </button>
-          </li>
-        `
-      )}
-    </ul>`;
+    return html`<div>TO DO:</div>
+      <ul>
+        ${this.allTodosCtl.state?.map(
+          (todo) => html`
+            <li ?data-isDone=${todo.isDone}>
+              <button
+                @click=${() => {
+                  this.completeSubCtl.subscription?.publish(todo);
+                }}
+                class="check"
+              >
+                ✔
+              </button>
+              <span
+                @click=${() => this.todoSelCtl.subscription?.publish(todo)}
+                class="text"
+                >${todo.text}</span
+              >
+              <button
+                @click=${() => {
+                  this.deleteSubCtl.subscription?.publish(todo);
+                }}
+                class="delete"
+              >
+                ❌
+              </button>
+            </li>
+          `
+        )}
+      </ul>`;
   }
 
   static override styles = css`
     button {
       padding: 5px;
     }
+
+    li[data-isDone] > .check {
+      display: none;
+    }
+
     li[data-isDone] > .check {
       display: none;
     }
     li[data-isDone] > .text {
       text-decoration: line-through;
+    }
+
+    .text {
+      cursor: pointer;
     }
   `;
 }
