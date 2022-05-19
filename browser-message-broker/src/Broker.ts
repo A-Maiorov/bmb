@@ -160,11 +160,24 @@ class Broker implements IBroker {
     }
   }
 
+  async Broadcast(subsKey: string, msg: unknown, targetId?: string) {
+    if (this.trace) console.log("[Message broadcasted]", subsKey, msg, this);
+
+    const envelope: IBroadcastEnvelope = {
+      subsKey,
+      senderCtx: globalThis.constructor.name,
+      senderId: senderId,
+      targetId: targetId,
+      msg,
+    };
+    this.__bcChannel.postMessage(envelope);
+  }
+
   async Publish(subsKey: string, msg: unknown, targetId?: string) {
     if (this.trace) console.log("[Message published]", subsKey, msg, this);
     await this.__notifySubscribers(subsKey, msg, senderId);
-    const bc = this.braodcasts.has(subsKey);
-    if (!bc) return;
+
+    if (!this.braodcasts.has(subsKey)) return;
 
     const envelope: IBroadcastEnvelope = {
       subsKey,

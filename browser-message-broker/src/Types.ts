@@ -23,7 +23,12 @@ export interface IBroker {
     enableBroadcast?: boolean,
     enableCaching?: boolean
   ): Subscription<T>;
-  Publish: (subsKey: string, msg: unknown, targetId?: string) => Promise<void>;
+  Publish: (subsKey: string, msg?: unknown, targetId?: string) => Promise<void>;
+  Broadcast: (
+    subsKey: string,
+    msg?: unknown,
+    targetId?: string
+  ) => Promise<void>;
   nextMessage<T>(subsKey: string): Promise<T>;
 }
 

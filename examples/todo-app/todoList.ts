@@ -3,12 +3,12 @@ import { customElement } from "lit/decorators.js";
 
 import { SubscriptionContorller } from "browser-message-broker/dist/LitSubscriptionContorller";
 import { ITodo, MESSAGES } from "./Messages";
-import { BMB, Subscription } from "browser-message-broker";
+import { BMB } from "browser-message-broker";
 
 @customElement("todo-list")
 export class TodoList extends LitElement {
   allTodosCtl: SubscriptionContorller<ITodo[]>;
-  getAlltodos: Subscription<unknown>;
+
   completeSubCtl: SubscriptionContorller<ITodo>;
   deleteSubCtl: SubscriptionContorller<ITodo>;
   todoSelCtl: SubscriptionContorller<ITodo>;
@@ -60,11 +60,8 @@ export class TodoList extends LitElement {
       MESSAGES.TODO_SELECTED
     );
 
-    this.getAlltodos = BMB.Subscribe(MESSAGES.GET_ALL_TODOS, undefined, true);
-
-    const dsReady = BMB.Subscribe(MESSAGES.DATA_SOURCE_READY, () => {
-      this.getAlltodos.publish(null);
-      dsReady.dispose();
+    BMB.nextMessage(MESSAGES.DATA_SOURCE_READY).then(() => {
+      BMB.Broadcast(MESSAGES.GET_ALL_TODOS);
     });
   }
 
