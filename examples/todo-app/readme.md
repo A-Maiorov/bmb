@@ -1,4 +1,4 @@
-# Todo-app - based on browser-message-broker
+# Todo-app based on browser-message-broker
 
 This is a minimalistic spa that consists of several independent components:
 
