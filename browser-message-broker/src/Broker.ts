@@ -159,6 +159,7 @@ class Broker implements IBroker {
       return undefined;
     }
   }
+
   async Publish(subsKey: string, msg: unknown, targetId?: string) {
     if (this.trace) console.log("[Message published]", subsKey, msg, this);
     await this.__notifySubscribers(subsKey, msg, senderId);
@@ -174,6 +175,31 @@ class Broker implements IBroker {
     };
 
     this.__bcChannel.postMessage(envelope);
+  }
+
+  private __nextMessageAwaters = new Map<
+    string,
+    { promise: Promise<unknown>; resolve: (msg: unknown) => unknown }
+  >();
+
+  async nextMessage<T = unknown>(subsKey: string): Promise<T> {
+    const a = this.__nextMessageAwaters.get(subsKey);
+    if (a) return a.promise as Promise<T>;
+
+    const newA: {
+      promise: Promise<unknown>;
+      resolve: (msg: unknown) => void;
+    } = {
+      promise: undefined as unknown as Promise<T>,
+      resolve: undefined as unknown as (msg: unknown) => void,
+    };
+    newA.promise = new Promise((res: (msg: unknown) => void) => {
+      newA.resolve = res;
+    });
+
+    this.__nextMessageAwaters.set(subsKey, newA);
+
+    return newA.promise as Promise<T>;
   }
 
   Subscribe<T>(
@@ -222,7 +248,19 @@ class Broker implements IBroker {
     await Promise.all(allSubscribersPromises);
 
     if (this.state.has(subsKey)) this.state.set(subsKey, msg);
+
+    this.__handleAwaiter(subsKey, msg);
+
     if (this.trace) console.log("[Message handled]", subsKey, msg, this);
+  }
+
+  private __handleAwaiter(subsKey: string, msg: unknown) {
+    const awaiter = this.__nextMessageAwaters.get(subsKey);
+    if (!awaiter) return;
+
+    awaiter.resolve(msg);
+
+    this.__nextMessageAwaters.delete(subsKey);
   }
 }
 

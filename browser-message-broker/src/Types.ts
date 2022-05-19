@@ -24,6 +24,7 @@ export interface IBroker {
     enableCaching?: boolean
   ): Subscription<T>;
   Publish: (subsKey: string, msg: unknown, targetId?: string) => Promise<void>;
+  nextMessage<T>(subsKey: string): Promise<T>;
 }
 
 export interface IBroadcastEnvelope<T = unknown> {

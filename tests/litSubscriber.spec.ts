@@ -4,7 +4,6 @@ import {
   TestElement,
 } from "./suite/LitElements/testElement";
 import { expect, fixture, html } from "@open-wc/testing";
-import { LitElement } from "lit";
 
 class TestMsg {
   public payload = "testmsg";
