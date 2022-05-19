@@ -19,19 +19,28 @@ jobs:
         node-version: [16.x, 18.x]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
+    defaults:
+      run:
+        working-directory: browser-message-broker
+
     steps:
     - uses: actions/checkout@v3
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v3
       with:
         node-version: ${{ matrix.node-version }}
-        cache: 'npm'
-    - working-directory: browser-message-broker
+        cache: 'npm'     
     - run: npm ci
+      working-directory: browser-message-broker
     - run: npm run build --if-present
+      working-directory: browser-message-broker
     - run: npm link
-    - working-directory: tests
+      working-directory: browser-message-broker     
     - run: npm ci
+      working-directory: tests
     - run: npm link browser-message-broker
+      working-directory: tests
     - run: npm run build --if-present
+      working-directory: tests
     - run: npm test
+      working-directory: tests
