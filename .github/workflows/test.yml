@@ -18,13 +18,13 @@ jobs:
     - name: Install dependencies for Playwright Webkit
       run: npx playwright install-deps 
     - uses: actions/checkout@v3    
-    - run: npm ci
+    - run: npm i
       working-directory: browser-message-broker
     - run: npm run build --if-present
       working-directory: browser-message-broker
     - run: npm link
       working-directory: browser-message-broker     
-    - run: npm ci
+    - run: npm i
       working-directory: tests
     - run: npm link browser-message-broker
       working-directory: tests
