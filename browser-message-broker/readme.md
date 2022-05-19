@@ -37,7 +37,7 @@ Configure subscription
 type MyMessage = { name: string; greeting: string }
 const myMessageSubscription = BMB.Subscribe<MyMessage>(
   "my-message", //message name
-  (msg)=> console.log(msg), //handler, msg will be of type MySessage
+  (msg)=> console.log(msg), //handler, msg will be of type MyMessage
   true, //enableBroadcast
   false //enableCaching
 );
