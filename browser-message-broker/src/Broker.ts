@@ -34,6 +34,7 @@ function debounce<T extends Function>(func: T, timeout = 1) {
 }
 
 class Broker implements IBroker {
+  trace: boolean = false;
   senderId = senderId;
   state = new Map<string, any>();
   subscribers = new Map<string, THandler[]>();
@@ -92,6 +93,11 @@ class Broker implements IBroker {
     };
 
     this.__bcChannel.postMessage(ev);
+
+    if (this.trace)
+      if (targetId == undefined)
+        console.log("[Broadcast sync requested]", ev, this);
+      else console.log("[Broadcast sync responded]", targetId, ev, this);
   }
 
   private handleBroadcastSync(ev: IBroadcastSyncEnvelope) {
@@ -106,22 +112,24 @@ class Broker implements IBroker {
         ) {
           this.__notifySubscribers(s[0], s[1], ev.senderId);
         }
+        if (this.trace)
+          console.log("[Broadcast sync responce handled]", ev, this);
       }
     }
   }
 
   private handleBroadcast(ev: MessageEvent<IBroadcastEnvelope>) {
-    console.log("BROADCAST RECEIVED: ", ev.data);
+    if (this.trace) console.log("[Broadcast received]", ev.data, this);
 
-    if (ev.data.targetId != undefined && ev.data.targetId !== senderId) return;
+    if (ev.data.targetId != undefined && ev.data.targetId !== senderId) {
+      if (this.trace) console.log("[Broadcast ignored]", ev.data, this);
+      return;
+    }
 
     if (isBroadcastSync(ev.data)) return this.handleBroadcastSync(ev.data);
 
-    return this.__notifySubscribers(
-      ev.data.subsKey,
-      ev.data.msg,
-      ev.data.senderId
-    );
+    this.__notifySubscribers(ev.data.subsKey, ev.data.msg, ev.data.senderId);
+    if (this.trace) console.log("[Broadcast handled]", ev.data, this);
   }
 
   /**
@@ -140,6 +148,7 @@ class Broker implements IBroker {
       this.braodcasts.delete(subscription.key);
     };
     subscription.isBroadcast = true;
+
     this.sendBrokerState();
   }
 
@@ -150,7 +159,8 @@ class Broker implements IBroker {
       return undefined;
     }
   }
-  async Publish(subsKey: string, msg: Object, targetId?: string) {
+  async Publish(subsKey: string, msg: unknown, targetId?: string) {
+    if (this.trace) console.log("[Message published]", subsKey, msg, this);
     await this.__notifySubscribers(subsKey, msg, senderId);
     const bc = this.braodcasts.has(subsKey);
     if (!bc) return;
@@ -190,6 +200,8 @@ class Broker implements IBroker {
 
     if (enableBroadcast) this.__configureBroadcast(subscription);
     if (enableCaching) this.state.set(key, undefined);
+
+    if (this.trace) console.log("[Subscribe]", subscription, this);
     return subscription;
   }
 
@@ -204,10 +216,13 @@ class Broker implements IBroker {
     for (const h of handlers) {
       if (!h) continue;
       allSubscribersPromises.push(Promise.resolve(h(msg, sId)));
+      if (this.trace) console.log("[Handler called]", h, this);
     }
 
     await Promise.all(allSubscribersPromises);
+
     if (this.state.has(subsKey)) this.state.set(subsKey, msg);
+    if (this.trace) console.log("[Message handled]", subsKey, msg, this);
   }
 }
 

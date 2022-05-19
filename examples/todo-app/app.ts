@@ -15,6 +15,7 @@ import { ITodo, ITodoErr, MESSAGES } from "./Messages";
     }
   }
 })();
+BMB.trace = true;
 
 @customElement("todo-app")
 export class TodoApp extends LitElement {

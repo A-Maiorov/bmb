@@ -14,7 +14,7 @@ export type THandler<T = unknown> = (
 export interface IBroker {
   state: Map<string, any>;
   subscribers: Map<string, THandler[]>;
-
+  trace: boolean;
   braodcasts: Set<string>;
   GetState<IStateItem>(subsKey: string): IStateItem | undefined;
   Subscribe<T>(
@@ -23,7 +23,7 @@ export interface IBroker {
     enableBroadcast?: boolean,
     enableCaching?: boolean
   ): Subscription<T>;
-  Publish: (subsKey: string, msg: Object, targetId?: string) => Promise<void>;
+  Publish: (subsKey: string, msg: unknown, targetId?: string) => Promise<void>;
 }
 
 export interface IBroadcastEnvelope<T = unknown> {

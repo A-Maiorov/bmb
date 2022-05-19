@@ -2,29 +2,30 @@
     "version": "2.0.0",
     "tasks": [
         {
+            "label": "start-todo-app",
             "type": "npm",
             "script": "start",
             "path": "examples/todo-app",
             "group": "build",
             "problemMatcher": [],
-            "label": "start-server",
             "dependsOn": "build-bmb"
         },
         {
+            "label": "build-bmb",
             "type": "npm",
             "script": "build",
             "path": "browser-message-broker",
             "group": "build",
-            "problemMatcher": [],
-            "label": "build-bmb"
+            "problemMatcher": []
         },
         {
+            "label": "run-tests",
             "type": "npm",
             "script": "test",
             "path": "tests",
             "group": "build",
-            "problemMatcher": [],
-            "label": "test"
+            "dependsOn": "build-bmb",
+            "problemMatcher": []
         }
     ]
 }

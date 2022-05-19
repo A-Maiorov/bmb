@@ -2,6 +2,8 @@ import { openDB } from "idb";
 import { BMB } from "browser-message-broker";
 import { IModifyTodo, ITodo, ITodoErr, MESSAGES } from "./Messages";
 
+BMB.trace = true;
+
 const errSubscription = BMB.Subscribe<ITodoErr>(
   MESSAGES.TODO_ERR,
   undefined,
@@ -50,7 +52,6 @@ BMB.Subscribe(MESSAGES.MODIFY_TODO, handleModifyTodo, true, false);
 BMB.Subscribe(MESSAGES.GET_ALL_TODOS, handleGetAllTodos, true, false);
 
 async function handleGetAllTodos(_: undefined, senderId: string) {
-  console.log("handleGetAllTodos");
   try {
     const db = await dbProm;
     const todos = (await db.getAll("todo")) as ITodo[];
@@ -131,3 +132,7 @@ async function handleAddTodo(todo: Partial<ITodo>) {
     });
   }
 }
+
+BMB.Subscribe(MESSAGES.DATA_SOURCE_READY, undefined, true, false).publish(
+  undefined
+);

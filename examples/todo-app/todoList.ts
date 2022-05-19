@@ -7,15 +7,15 @@ import { BMB, Subscription } from "browser-message-broker";
 
 @customElement("todo-list")
 export class TodoList extends LitElement {
-  subs: SubscriptionContorller<ITodo[]>;
-  getAllsubs: Subscription<unknown>;
+  allTodosCtl: SubscriptionContorller<ITodo[]>;
+  getAlltodos: Subscription<unknown>;
   completeSubCtl: SubscriptionContorller<ITodo>;
   deleteSubCtl: SubscriptionContorller<ITodo>;
   todoSelCtl: SubscriptionContorller<ITodo>;
 
   constructor() {
     super();
-    this.subs = new SubscriptionContorller<ITodo[]>(
+    this.allTodosCtl = new SubscriptionContorller<ITodo[]>(
       this,
       MESSAGES.ALL_TODOS,
       true
@@ -42,8 +42,6 @@ export class TodoList extends LitElement {
       this.handleTodoDeleted.bind(this)
     );
 
-    this.getAllsubs = BMB.Subscribe(MESSAGES.GET_ALL_TODOS, undefined, true);
-
     this.completeSubCtl = new SubscriptionContorller<ITodo>(
       this,
       MESSAGES.COMPLETE_TODO,
@@ -62,27 +60,32 @@ export class TodoList extends LitElement {
       MESSAGES.TODO_SELECTED
     );
 
-    this.getAllsubs.publish(null);
+    this.getAlltodos = BMB.Subscribe(MESSAGES.GET_ALL_TODOS, undefined, true);
+
+    const dsReady = BMB.Subscribe(MESSAGES.DATA_SOURCE_READY, () => {
+      this.getAlltodos.publish(null);
+      dsReady.dispose();
+    });
   }
 
   handleTodoAdded(todo: ITodo) {
-    this.subs.state?.push(todo);
+    this.allTodosCtl.state?.push(todo);
     this.requestUpdate();
   }
   handleTodoDeleted(todo: ITodo) {
     console.log("handleTodoDeleted (in list)");
-    if (!this.subs.state) return;
-    const ind = this.subs.state?.findIndex((t) => t.id === todo.id);
+    if (!this.allTodosCtl.state) return;
+    const ind = this.allTodosCtl.state?.findIndex((t) => t.id === todo.id);
     if (ind === -1) return;
-    this.subs.state.splice(ind, 1);
+    this.allTodosCtl.state.splice(ind, 1);
     this.requestUpdate();
   }
   handleTodoModified(todo: ITodo) {
     console.log("handleTodoModified (in list)");
-    if (!this.subs.state) return;
-    const ind = this.subs.state?.findIndex((t) => t.id === todo.id);
+    if (!this.allTodosCtl.state) return;
+    const ind = this.allTodosCtl.state?.findIndex((t) => t.id === todo.id);
     if (ind === -1) return;
-    this.subs.state[ind] = todo;
+    this.allTodosCtl.state[ind] = todo;
     this.requestUpdate();
   }
 
@@ -92,7 +95,7 @@ export class TodoList extends LitElement {
 
   override render() {
     return html`<ul>
-      ${this.subs.state?.map(
+      ${this.allTodosCtl.state?.map(
         (todo) => html`
           <li ?data-isDone=${todo.isDone}>
             <button
