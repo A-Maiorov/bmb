@@ -20,7 +20,7 @@ BMB is a tiny message broker (only 1.4 kb compressed) that supports Publish/Subs
 Install:
 
 ```console
-npm install browser-message-broker --save-dev
+npm install browser-message-broker --save
 ```
 
 Import:
