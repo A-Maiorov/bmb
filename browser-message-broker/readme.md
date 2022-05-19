@@ -1,7 +1,9 @@
 # BMB - BrowserMessageBroker
+
+> ⚠️ **EXPERIMENTAL AND POORLY TESTED!** Use on your own risk
+
 ![Tests](https://github.com/A-Maiorov/bmb/actions/workflows/test.yml/badge.svg)
-> [!WARNING]
-> EXPERIMENTAL AND POORLY TESTED! Use on your own risk.
+[![Published on npm](https://img.shields.io/npm/v/browser-message-broker.svg?logo=npm)](https://www.npmjs.com/package/browser-message-broker)
 
 BMB is a tiny message broker (only 1.4 kb compressed) that supports Publish/Subscribe messaging pattern across multiple scripting contexts of the same origin (Tabs, Service Worker, Dedicated and Shared Worker).
 
