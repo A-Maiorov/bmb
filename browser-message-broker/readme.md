@@ -60,3 +60,5 @@ Open two browser tabs and see message in DevTools console in both tabs
 ## Examples
 
 See `/examples/todo-app` in this repo
+
+[Todo-app example readme](/examples/todo-app/readme.md)
