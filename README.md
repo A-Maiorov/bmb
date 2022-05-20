@@ -29,6 +29,7 @@ Import:
 
 ```js
 import { BMB } from "browser-message-broker";
+BMB.trace = true; //enable logging messages to the console
 ```
 
 Configure subscription

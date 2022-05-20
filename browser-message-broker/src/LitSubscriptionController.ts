@@ -2,9 +2,9 @@ import type { ReactiveController, ReactiveControllerHost } from "lit";
 import type { IBroker, Subscription, THandler } from "./Types";
 
 let BMB = globalThis.BrowserMessageBroker;
-
 let resolveBroker: (b: IBroker) => void = () => {};
 let bmbReady = Promise.resolve(BMB);
+
 if (!BMB && globalThis.constructor.name === "Window") {
   bmbReady = new Promise<IBroker>((res) => {
     resolveBroker = res;

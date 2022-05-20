@@ -20,6 +20,7 @@ export class TodoList extends LitElement {
       MESSAGES.ALL_TODOS,
       true
     );
+
     new SubscriptionController<ITodo>(
       this,
       MESSAGES.TODO_ADDED,
@@ -27,6 +28,7 @@ export class TodoList extends LitElement {
       false,
       this.handleTodoAdded.bind(this)
     );
+
     new SubscriptionController<ITodo>(
       this,
       MESSAGES.TODO_MODIFIED,
@@ -34,6 +36,7 @@ export class TodoList extends LitElement {
       false,
       this.handleTodoModified.bind(this)
     );
+
     new SubscriptionController<ITodo>(
       this,
       MESSAGES.TODO_DELETED,

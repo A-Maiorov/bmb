@@ -17,12 +17,14 @@ export class TodoEditor extends LitElement {
       false,
       true
     );
+
     this.modifyTodoCtl = new SubscriptionController<IModifyTodo>(
       this,
       MESSAGES.MODIFY_TODO,
       true,
       false
     );
+
     this.todoModifiedCtl = new SubscriptionController<ITodo>(
       this,
       MESSAGES.TODO_MODIFIED,

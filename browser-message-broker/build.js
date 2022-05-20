@@ -10,6 +10,7 @@ esbuild
     target: "es2020",
     platform: "browser",
     format: "esm",
+    plugins: [],
   })
   .catch(() => process.exit(1));
 
@@ -23,5 +24,6 @@ esbuild
     target: "es2020",
     platform: "browser",
     format: "esm",
+    plugins: [],
   })
   .catch(() => process.exit(1));
