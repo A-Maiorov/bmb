@@ -5,7 +5,7 @@
 ![Tests](https://github.com/A-Maiorov/bmb/actions/workflows/test.yml/badge.svg)
 [![Published on npm](https://img.shields.io/npm/v/browser-message-broker.svg?logo=npm)](https://www.npmjs.com/package/browser-message-broker)
 
-BMB is a tiny message broker (only 1.4 kb compressed) that supports Publish/Subscribe messaging pattern across multiple scripting contexts of the same origin (Tabs, Service Worker, Dedicated and Shared Worker). It uses [BroadcastChannel](https://developer.mozilla.org/en-US/docs/Web/API/BroadcastChannel#browser_compatibility) as a unified way of communication between different contexts.
+BMB is a tiny message broker (only 1.4 kb compressed) that supports Publish/Subscribe and Request/Reply messaging patterns across multiple scripting contexts of the same origin (Tabs, Ifames, Service Workers, Dedicated and Shared Worker). It uses [BroadcastChannel](https://developer.mozilla.org/en-US/docs/Web/API/BroadcastChannel#browser_compatibility) as a unified way of communication between different contexts.
 
 ## Potential use cases
 

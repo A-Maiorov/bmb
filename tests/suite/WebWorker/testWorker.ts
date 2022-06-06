@@ -1,11 +1,28 @@
 import { BMB } from "browser-message-broker";
+import {
+  PUB_SUB_REQUEST_SUBSCRIPTION_KEY,
+  PUB_SUB_RESPONSE_SUBSCRIPTION_KEY,
+  REQ_REP_CHANNEL_NAME,
+} from "./constants";
 
-const responseToWindow = BMB.Subscribe("testResp", undefined, true);
+const pubSubChannelToWindow = BMB.Subscribe(
+  PUB_SUB_RESPONSE_SUBSCRIPTION_KEY,
+  undefined,
+  true
+);
 
-const requestFromWindow = BMB.Subscribe(
-  "testReq",
+BMB.Subscribe(
+  PUB_SUB_REQUEST_SUBSCRIPTION_KEY,
   (_) => {
-    BMB.Publish("testResp", { payload: "response" });
+    pubSubChannelToWindow.publish({ payload: "response" });
+  },
+  true
+);
+
+BMB.Reply(
+  REQ_REP_CHANNEL_NAME,
+  (req: { payload: string }) => {
+    return { payload: req.payload + "response" };
   },
   true
 );

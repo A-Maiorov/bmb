@@ -51,7 +51,7 @@ BMB.Subscribe(MESSAGES.DEL_TODO, handleDeleteTodo, true, false);
 BMB.Subscribe(MESSAGES.MODIFY_TODO, handleModifyTodo, true, false);
 BMB.Subscribe(MESSAGES.GET_ALL_TODOS, handleGetAllTodos, true, false);
 
-async function handleGetAllTodos(_: undefined, senderId: string) {
+async function handleGetAllTodos(_: undefined, senderId?: string) {
   try {
     const db = await dbProm;
     const todos = (await db.getAll("todo")) as ITodo[];

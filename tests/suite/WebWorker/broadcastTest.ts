@@ -1,6 +1,11 @@
 import { runTests } from "@web/test-runner-mocha";
 import { expect } from "@open-wc/testing";
 import { BMB } from "browser-message-broker";
+import {
+  PUB_SUB_REQUEST_SUBSCRIPTION_KEY,
+  PUB_SUB_RESPONSE_SUBSCRIPTION_KEY,
+  REQ_REP_CHANNEL_NAME,
+} from "./constants";
 
 //this url is relative to browser
 var testWorker = new Worker("suite/WebWorker/testWorker.js");
@@ -19,9 +24,6 @@ const responseReceived = new Promise<void>((res) => {
   _resolveResponseReceived = res;
 });
 
-const REQUEST_SUBSCRIPTION_KEY = "testReq";
-const RESPONSE_SUBSCRIPTION_KEY = "testResp";
-
 function setup() {
   //wait for worker
   testWorker.onmessage = (m) => {
@@ -30,12 +32,12 @@ function setup() {
     }
   };
 
-  //Configure subscription to ask worker to send response
-  BMB.Subscribe(REQUEST_SUBSCRIPTION_KEY, undefined, true);
+  //Configure subscription to ask worker to send response via PUB-SUB channel
+  BMB.Subscribe(PUB_SUB_REQUEST_SUBSCRIPTION_KEY, undefined, true);
 
-  //Configure subscription to receive response message from worker
+  //Configure subscription to receive response message from worker via PUB-SUB channel
   BMB.Subscribe<testMsg>(
-    RESPONSE_SUBSCRIPTION_KEY,
+    PUB_SUB_RESPONSE_SUBSCRIPTION_KEY,
     (m) => {
       const el = document.getElementById("test");
       if (el) {
@@ -50,16 +52,30 @@ function setup() {
 export function test() {
   runTests(async () => {
     setup();
+
     describe("Broadcast messages to/from WebWorker", () => {
-      it("Should eventually receive and display response from WebWorker", async () => {
+      it("Should eventually receive and display response from WebWorker via pub-sub channel", async () => {
         await workerIsReady;
 
-        BMB.Publish("testReq", { payload: "request" });
+        BMB.Publish(PUB_SUB_REQUEST_SUBSCRIPTION_KEY, { payload: "request" });
 
         await responseReceived;
 
         const el = document.getElementById("test");
         expect(el).lightDom.to.equal("response");
+      });
+
+      it("Should eventually receive and display response from WebWorker via request-reply channel", async () => {
+        const response = await BMB.Request<{ payload: string }>(
+          REQ_REP_CHANNEL_NAME,
+          {
+            payload: "request",
+          },
+          true
+        );
+
+        expect(response).to.be.not.undefined;
+        expect(response?.payload).to.equal("requestresponse");
       });
     });
   });

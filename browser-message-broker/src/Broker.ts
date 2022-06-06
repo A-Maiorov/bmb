@@ -1,8 +1,10 @@
 import {
+  ChannelType,
   IBroadcastEnvelope,
   IBroadcastSyncEnvelope,
   IBroker,
   IBrokerState,
+  ReqSubscription,
   Subscription,
   THandler,
 } from "./Types";
@@ -90,6 +92,7 @@ class Broker implements IBroker {
       senderId,
       targetId,
       msg: state,
+      channelType: "sync",
     };
 
     this.__bcChannel.postMessage(ev);
@@ -128,7 +131,27 @@ class Broker implements IBroker {
 
     if (isBroadcastSync(ev.data)) return this.handleBroadcastSync(ev.data);
 
-    this.__notifySubscribers(ev.data.subsKey, ev.data.msg, ev.data.senderId);
+    switch (ev.data.channelType) {
+      case "pubSub":
+        this.__notifySubscribers(
+          ev.data.subsKey,
+          ev.data.msg,
+          ev.data.senderId
+        );
+        break;
+      case "req":
+        this.bridgeRequest(ev.data.subsKey, ev.data.msg, ev.data.senderId);
+        break;
+      case "rep":
+        const req = this.broadcastedRequests.get(ev.data.subsKey);
+        if (!req) return;
+
+        req.resolve(ev.data.msg);
+        this.broadcastedRequests.delete(ev.data.subsKey);
+
+        break;
+    }
+
     if (this.trace) console.log("[Broadcast handled]", ev.data, this);
   }
 
@@ -161,6 +184,15 @@ class Broker implements IBroker {
   }
 
   async Broadcast(subsKey: string, msg: unknown, targetId?: string) {
+    this._broadcast(subsKey, msg, "pubSub", targetId);
+  }
+
+  private _broadcast(
+    subsKey: string,
+    msg: unknown,
+    channelType: ChannelType,
+    targetId?: string
+  ) {
     if (this.trace) console.log("[Message broadcasted]", subsKey, msg, this);
 
     const envelope: IBroadcastEnvelope = {
@@ -169,6 +201,7 @@ class Broker implements IBroker {
       senderId: senderId,
       targetId: targetId,
       msg,
+      channelType,
     };
     this.__bcChannel.postMessage(envelope);
   }
@@ -179,15 +212,7 @@ class Broker implements IBroker {
 
     if (!this.braodcasts.has(subsKey)) return;
 
-    const envelope: IBroadcastEnvelope = {
-      subsKey,
-      senderCtx: globalThis.constructor.name,
-      senderId: senderId,
-      targetId: targetId,
-      msg,
-    };
-
-    this.__bcChannel.postMessage(envelope);
+    this._broadcast(subsKey, msg, "pubSub", targetId);
   }
 
   private __nextMessageAwaters = new Map<
@@ -199,20 +224,20 @@ class Broker implements IBroker {
     const a = this.__nextMessageAwaters.get(subsKey);
     if (a) return a.promise as Promise<T>;
 
-    const newA: {
+    const newAwaiter: {
       promise: Promise<unknown>;
       resolve: (msg: unknown) => void;
     } = {
       promise: undefined as unknown as Promise<T>,
       resolve: undefined as unknown as (msg: unknown) => void,
     };
-    newA.promise = new Promise((res: (msg: unknown) => void) => {
-      newA.resolve = res;
+    newAwaiter.promise = new Promise((res: (msg: unknown) => void) => {
+      newAwaiter.resolve = res;
     });
 
-    this.__nextMessageAwaters.set(subsKey, newA);
+    this.__nextMessageAwaters.set(subsKey, newAwaiter);
 
-    return newA.promise as Promise<T>;
+    return newAwaiter.promise as Promise<T>;
   }
 
   Subscribe<T>(
@@ -243,6 +268,89 @@ class Broker implements IBroker {
     if (this.trace) console.log("[Subscribe]", subscription, this);
     return subscription;
   }
+
+  private bridgeRequest(
+    channelName: string,
+    requestData: unknown,
+    senderId: string
+  ) {
+    const listener = this.requestListeners.get(channelName);
+    if (!listener) return Promise.resolve(undefined);
+    return listener.handler(requestData, senderId) as Promise<unknown>;
+  }
+
+  Request<TRep = unknown>(
+    channelName: string,
+    requestData: unknown,
+    enableBroadcast = false,
+    targetId?: string
+  ): Promise<TRep> | Promise<undefined> {
+    if (!enableBroadcast) {
+      const listener = this.requestListeners.get(channelName);
+      if (!listener) return Promise.resolve(undefined);
+      return listener.handler(requestData) as Promise<TRep>;
+    } else {
+      this._broadcast(channelName, requestData, "req", targetId);
+      const req = this.broadcastedRequests.get(channelName);
+      if (req) req.resolve(undefined);
+
+      let resolve = undefined as unknown as (r: unknown) => void;
+      const promise = new Promise<TRep>(
+        (res) => (resolve = res as (r: unknown) => void)
+      );
+      const breq = {
+        promise,
+        resolve,
+      };
+      this.broadcastedRequests.set(channelName, breq);
+      return breq.promise;
+    }
+  }
+  private broadcastedRequests = new Map<
+    string,
+    { promise: Promise<unknown>; resolve: (r: unknown) => void }
+  >();
+
+  Reply<TReq = unknown, TRep = unknown>(
+    channelName: string,
+    handler: (req: TReq) => TRep,
+    enableBroadcast = false
+  ) {
+    if (enableBroadcast) {
+      const origHandler = handler;
+      handler = ((msg: TReq, targetId: string) =>
+        this._broadcast(
+          channelName,
+          origHandler(msg),
+          "rep",
+          targetId
+        )) as unknown as (req: TReq) => TRep;
+    }
+
+    const subs: ReqSubscription = {
+      channelName,
+      isDisposed: true,
+      isBroadcast: enableBroadcast,
+      handler: handler as (r: unknown) => unknown,
+      dispose: undefined as unknown as () => void,
+    };
+
+    subs.dispose = () => {
+      subs.isDisposed = true;
+      const currentListener = this.requestListeners.get(channelName);
+      if (currentListener === subs) this.requestListeners.delete(channelName);
+    };
+
+    const currentListener = this.requestListeners.get(channelName);
+    if (currentListener) {
+      currentListener.isDisposed = true;
+      console.warn("Request listener replaced: " + channelName);
+    }
+    this.requestListeners.set(channelName, subs);
+    return subs;
+  }
+
+  private requestListeners = new Map<string, ReqSubscription>();
 
   private async __notifySubscribers(
     subsKey: string,

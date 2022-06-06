@@ -6,9 +6,16 @@ export interface Subscription<T> {
   isDisposed?: boolean;
   isBroadcast?: boolean;
 }
+export interface ReqSubscription<TReq = unknown, TRep = unknown> {
+  channelName: string;
+  isDisposed: boolean;
+  isBroadcast?: boolean;
+  handler: (r: TReq, targetId?: string) => TRep;
+  dispose: () => void;
+}
 export type THandler<T = unknown> = (
   msg: T,
-  senderId: string
+  senderId?: string
 ) => void | Promise<void>;
 
 export interface IBroker {
@@ -30,14 +37,26 @@ export interface IBroker {
     targetId?: string
   ) => Promise<void>;
   nextMessage<T>(subsKey: string): Promise<T>;
+  Request<TRep = unknown>(
+    channelName: string,
+    requestData: unknown,
+    enableBroadcast?: boolean
+  ): Promise<TRep> | Promise<undefined>;
+  Reply<TReq = unknown, TRep = unknown>(
+    channelName: string,
+    handler: (req: TReq) => TRep,
+    enableBroadcast?: boolean
+  ): ReqSubscription;
 }
 
+export type ChannelType = "pubSub" | "req" | "rep" | "sync";
 export interface IBroadcastEnvelope<T = unknown> {
   senderId: string;
   targetId?: string;
   subsKey: string;
   senderCtx: string;
   msg: T;
+  channelType: ChannelType;
 }
 
 export interface IBrokerState {
