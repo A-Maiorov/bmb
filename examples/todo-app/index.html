@@ -5,14 +5,20 @@
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
     <title>Todo Appp</title>
     <meta name='viewport' content='width=device-width, initial-scale=1'>  
-    <script src='app.js' module async></script>
-    <script src='todoList.js' module async></script> 
-    <script src='todoEditor.js' module async></script>
-</head>
-<body>
-    <todo-editor></todo-editor>
-    <todo-app></todo-app>
-    <todo-list></todo-list>
+    <script src='app.js' module async></script>    
+    <style>
+        #editor{
+            height: 60px;
+        }
 
+        #list{
+            height: 600px;
+        }
+    </style>
+</head>
+<body>    
+    <iframe id="editor" sandbox="allow-same-origin allow-scripts allow-top-navigation" src="/todoEditor.index.html"></iframe>  
+    <todo-app></todo-app>     
+    <iframe id="list" sandbox="allow-same-origin allow-scripts allow-top-navigation" src="/todoList.index.html"></iframe>
 </body>
 </html>

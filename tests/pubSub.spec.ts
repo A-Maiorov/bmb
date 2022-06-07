@@ -13,6 +13,7 @@ describe("Browser Message Broker subscriber", () => {
     received = true;
     receivedPayload = x.payload;
   });
+
   before(async () => {
     await BMB.Publish(TestMsg.name, new TestMsg());
   });

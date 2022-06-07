@@ -1,7 +1,7 @@
 export interface Subscription<T> {
   dispose: () => void;
   publish: (msg: T, targetId?: string) => Promise<void>;
-  key: string;
+  channelName: string;
   isCached: boolean;
   isDisposed?: boolean;
   isBroadcast?: boolean;
@@ -23,19 +23,29 @@ export interface IBroker {
   subscribers: Map<string, THandler[]>;
   trace: boolean;
   braodcasts: Set<string>;
-  GetState<IStateItem>(subsKey: string): IStateItem | undefined;
+  GetState<IStateItem>(channelName: string): IStateItem | undefined;
+  ConfigureChannel(
+    channelName: string,
+    enableBroadcast: boolean,
+    enableCaching: boolean,
+    trace: boolean
+  ): void;
   Subscribe<T>(
-    subsKey: string,
+    channelName: string,
     handler?: THandler<T>,
     enableBroadcast?: boolean,
     enableCaching?: boolean
   ): Subscription<T>;
-  Publish: (subsKey: string, msg?: unknown, targetId?: string) => Promise<void>;
-  Broadcast: (
+  Publish<T = unknown>(
     subsKey: string,
-    msg?: unknown,
+    msg?: T,
     targetId?: string
-  ) => Promise<void>;
+  ): Promise<void>;
+  Broadcast<T = unknown>(
+    channelName: string,
+    msg?: T,
+    targetId?: string
+  ): Promise<void>;
   nextMessage<T>(subsKey: string): Promise<T>;
   Request<TRep = unknown>(
     channelName: string,
@@ -53,7 +63,7 @@ export type ChannelType = "pubSub" | "req" | "rep" | "sync";
 export interface IBroadcastEnvelope<T = unknown> {
   senderId: string;
   targetId?: string;
-  subsKey: string;
+  channelName: string;
   senderCtx: string;
   msg: T;
   channelType: ChannelType;
@@ -67,7 +77,7 @@ export interface IBrokerState {
 
 export interface IBroadcastSyncEnvelope
   extends IBroadcastEnvelope<IBrokerState> {
-  subsKey: "broadcast-sync";
+  channelName: "broadcast-sync";
   msg: IBrokerState;
 }
 declare global {

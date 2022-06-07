@@ -2,8 +2,6 @@ import { openDB } from "idb";
 import { BMB } from "browser-message-broker";
 import { IModifyTodo, ITodo, ITodoErr, MESSAGES } from "./Messages";
 
-BMB.trace = true;
-
 const errSubscription = BMB.Subscribe<ITodoErr>(
   MESSAGES.TODO_ERR,
   undefined,
@@ -14,7 +12,7 @@ const addedSubscription = BMB.Subscribe<ITodo>(
   MESSAGES.TODO_ADDED,
   undefined,
   true,
-  false //to avoid publishing this state to remote brokers on sync
+  false //in order to avoid publishing this state to remote brokers on sync
 );
 const deletedSubscription = BMB.Subscribe<ITodo>(
   MESSAGES.TODO_DELETED,
@@ -81,7 +79,6 @@ async function handleModifyTodo(msg: IModifyTodo) {
 }
 
 async function handleDeleteTodo(todo: ITodo) {
-  console.log("handleDeleteTodo");
   try {
     const db = await dbProm;
     await db.delete("todo", todo.id);
@@ -95,7 +92,6 @@ async function handleDeleteTodo(todo: ITodo) {
 }
 
 async function handleCompleteTodo(todo: ITodo) {
-  console.log("handleCompleteTodo");
   try {
     const db = await dbProm;
     await db.put("todo", { ...todo, isDone: true });
@@ -110,7 +106,6 @@ async function handleCompleteTodo(todo: ITodo) {
 }
 
 async function handleAddTodo(todo: Partial<ITodo>) {
-  console.log("handleAddTodo");
   if (!todo.text || todo.text === "") {
     errSubscription.publish({
       context: todo,
@@ -133,6 +128,5 @@ async function handleAddTodo(todo: Partial<ITodo>) {
   }
 }
 
-BMB.Subscribe(MESSAGES.DATA_SOURCE_READY, undefined, true, false).publish(
-  undefined
-);
+BMB.ConfigureChannel(MESSAGES.DATA_SOURCE_READY, true, true, false);
+BMB.Broadcast(MESSAGES.DATA_SOURCE_READY, true);

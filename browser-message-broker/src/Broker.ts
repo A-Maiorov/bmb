@@ -13,7 +13,7 @@ const BROADCAST_SYNC = "broadcast-sync";
 const BROWSER_MESSAGE_BROKER = "browser-message-broker";
 
 function isBroadcastSync(e: IBroadcastEnvelope): e is IBroadcastSyncEnvelope {
-  return e.subsKey === BROADCAST_SYNC;
+  return e.channelName === BROADCAST_SYNC;
 }
 
 function isSyncReq(e: IBroadcastEnvelope) {
@@ -35,6 +35,11 @@ function debounce<T extends Function>(func: T, timeout = 1) {
   };
 }
 
+const channelSettings = new Map<
+  string,
+  { enableBroadcast: boolean; enableCaching: boolean; trace: boolean }
+>();
+
 class Broker implements IBroker {
   trace: boolean = false;
   senderId = senderId;
@@ -44,16 +49,26 @@ class Broker implements IBroker {
   private __bcChannel = new BroadcastChannel(BROWSER_MESSAGE_BROKER);
 
   constructor() {
-    if (globalThis.constructor.name === "Window") {
-      const ev = new CustomEvent("bmb-ready", { detail: this });
-      globalThis.document.dispatchEvent(ev);
-    }
     this.__bcChannel.onmessage = this.handleBroadcast.bind(this);
     this.__bcChannel.onmessageerror = this.handleBroadcastError.bind(this);
 
-    this.sendBrokerState = debounce(this.__sendBrokerState.bind(this), 2);
+    setTimeout(() => {
+      this.__sendBrokerState(undefined, undefined); // always send initial sync request
+    }, 0);
 
-    this.sendBrokerState();
+    this.sendBrokerState = debounce(this.__sendBrokerState.bind(this), 2);
+  }
+
+  ConfigureChannel(
+    channelName: string,
+    enableBroadcast: boolean,
+    enableCaching: boolean,
+    trace: boolean
+  ): void {
+    channelSettings.set(channelName, { enableBroadcast, enableCaching, trace });
+
+    if (enableCaching) this.state.set(channelName, undefined);
+    if (enableBroadcast) this.braodcasts.add(channelName);
   }
 
   private handleBroadcastError(ev: MessageEvent<IBroadcastEnvelope>) {
@@ -87,7 +102,7 @@ class Broker implements IBroker {
     };
 
     const ev: IBroadcastSyncEnvelope = {
-      subsKey: BROADCAST_SYNC,
+      channelName: BROADCAST_SYNC,
       senderCtx: globalThis.constructor.name,
       senderId,
       targetId,
@@ -122,10 +137,12 @@ class Broker implements IBroker {
   }
 
   private handleBroadcast(ev: MessageEvent<IBroadcastEnvelope>) {
-    if (this.trace) console.log("[Broadcast received]", ev.data, this);
+    const trace = this.trace || channelSettings.get(ev.data.channelName)?.trace;
+
+    if (trace) console.log("[Broadcast received]", ev.data, this);
 
     if (ev.data.targetId != undefined && ev.data.targetId !== senderId) {
-      if (this.trace) console.log("[Broadcast ignored]", ev.data, this);
+      if (trace) console.log("[Broadcast ignored]", ev.data, this);
       return;
     }
 
@@ -134,25 +151,25 @@ class Broker implements IBroker {
     switch (ev.data.channelType) {
       case "pubSub":
         this.__notifySubscribers(
-          ev.data.subsKey,
+          ev.data.channelName,
           ev.data.msg,
           ev.data.senderId
         );
         break;
       case "req":
-        this.bridgeRequest(ev.data.subsKey, ev.data.msg, ev.data.senderId);
+        this.bridgeRequest(ev.data.channelName, ev.data.msg, ev.data.senderId);
         break;
       case "rep":
-        const req = this.broadcastedRequests.get(ev.data.subsKey);
+        const req = this.broadcastedRequests.get(ev.data.channelName);
         if (!req) return;
 
         req.resolve(ev.data.msg);
-        this.broadcastedRequests.delete(ev.data.subsKey);
+        this.broadcastedRequests.delete(ev.data.channelName);
 
         break;
     }
 
-    if (this.trace) console.log("[Broadcast handled]", ev.data, this);
+    if (trace) console.log("[Broadcast handled]", ev.data, this);
   }
 
   /**
@@ -161,14 +178,14 @@ class Broker implements IBroker {
    * @returns {Subscription}
    */
   private __configureBroadcast(subscription: Subscription<any>): void {
-    if (!subscription.key) {
+    if (!subscription.channelName) {
       throw new Error(`Invalid subscription`);
     }
-    this.braodcasts.add(subscription.key);
+    this.braodcasts.add(subscription.channelName);
     const originalDispose = subscription.dispose;
     subscription.dispose = () => {
       originalDispose();
-      this.braodcasts.delete(subscription.key);
+      this.braodcasts.delete(subscription.channelName);
     };
     subscription.isBroadcast = true;
 
@@ -183,36 +200,42 @@ class Broker implements IBroker {
     }
   }
 
-  async Broadcast(subsKey: string, msg: unknown, targetId?: string) {
-    this._broadcast(subsKey, msg, "pubSub", targetId);
+  async Broadcast(channelName: string, msg: unknown, targetId?: string) {
+    this._broadcast(channelName, msg, "pubSub", targetId);
   }
 
   private _broadcast(
-    subsKey: string,
+    channelName: string,
     msg: unknown,
     channelType: ChannelType,
     targetId?: string
   ) {
-    if (this.trace) console.log("[Message broadcasted]", subsKey, msg, this);
+    const settings = channelSettings.get(channelName);
+    const trace = this.trace || settings?.trace;
+    if (trace) console.log("[Message broadcasted]", channelName, msg, this);
 
     const envelope: IBroadcastEnvelope = {
-      subsKey,
+      channelName: channelName,
       senderCtx: globalThis.constructor.name,
       senderId: senderId,
       targetId: targetId,
       msg,
       channelType,
     };
+
+    if (settings?.enableCaching) this.state.set(channelName, msg);
+
     this.__bcChannel.postMessage(envelope);
   }
 
-  async Publish(subsKey: string, msg: unknown, targetId?: string) {
-    if (this.trace) console.log("[Message published]", subsKey, msg, this);
-    await this.__notifySubscribers(subsKey, msg, senderId);
+  async Publish(channelName: string, msg: unknown, targetId?: string) {
+    const trace = this.trace || channelSettings.get(channelName)?.trace;
+    if (trace) console.log("[Message published]", channelName, msg, this);
+    await this.__notifySubscribers(channelName, msg, senderId);
 
-    if (!this.braodcasts.has(subsKey)) return;
+    if (!this.braodcasts.has(channelName)) return;
 
-    this._broadcast(subsKey, msg, "pubSub", targetId);
+    this._broadcast(channelName, msg, "pubSub", targetId);
   }
 
   private __nextMessageAwaters = new Map<
@@ -241,31 +264,45 @@ class Broker implements IBroker {
   }
 
   Subscribe<T>(
-    key: string,
+    channelName: string,
     handler?: THandler<T>,
     enableBroadcast = false,
     enableCaching = true
   ): Subscription<T> {
-    const subs = this.subscribers.get(key) || [];
+    const settings = channelSettings.get(channelName);
+    const settingsOverriden = false;
+    if (settings) {
+      enableBroadcast = settings.enableBroadcast;
+      enableCaching = settings.enableCaching;
+      settingsOverriden;
+    }
+
+    const subs = this.subscribers.get(channelName) || [];
     const hdl = handler as (msg: unknown) => void;
     subs.push(hdl);
-    this.subscribers.set(key, subs);
+    this.subscribers.set(channelName, subs);
 
     const subscription: Subscription<T> = {
-      key: key,
+      channelName: channelName,
       isCached: false,
       dispose: () => {
         subs.splice(subs.indexOf(hdl), 1);
         subscription.isDisposed = true;
       },
-      publish: (msg, targetId?: string) => this.Publish(key, msg, targetId),
+      publish: (msg, targetId?: string) =>
+        this.Publish(channelName, msg, targetId),
       isDisposed: false,
     };
 
     if (enableBroadcast) this.__configureBroadcast(subscription);
-    if (enableCaching) this.state.set(key, undefined);
+    if (enableCaching) this.state.set(channelName, undefined);
 
-    if (this.trace) console.log("[Subscribe]", subscription, this);
+    if (this.trace || channelSettings.get(channelName)?.trace) {
+      const settingsStatus = settingsOverriden
+        ? ", preconfigured settings"
+        : "";
+      console.log(`[Subscribe${settingsStatus}]`, subscription, this);
+    }
     return subscription;
   }
 
@@ -353,26 +390,26 @@ class Broker implements IBroker {
   private requestListeners = new Map<string, ReqSubscription>();
 
   private async __notifySubscribers(
-    subsKey: string,
+    channelName: string,
     msg: unknown,
     sId: string
   ) {
-    const handlers = this.subscribers.get(subsKey) || [];
-
+    const handlers = this.subscribers.get(channelName) || [];
+    const trace = this.trace || channelSettings.get(channelName)?.trace;
     const allSubscribersPromises: Promise<void>[] = [];
     for (const h of handlers) {
       if (!h) continue;
       allSubscribersPromises.push(Promise.resolve(h(msg, sId)));
-      if (this.trace) console.log("[Handler called]", h, this);
+      if (trace) console.log("[Handler called]", h, this);
     }
 
     await Promise.all(allSubscribersPromises);
 
-    if (this.state.has(subsKey)) this.state.set(subsKey, msg);
+    if (this.state.has(channelName)) this.state.set(channelName, msg);
 
-    this.__handleAwaiter(subsKey, msg);
+    this.__handleAwaiter(channelName, msg);
 
-    if (this.trace) console.log("[Message handled]", subsKey, msg, this);
+    if (trace) console.log("[Message handled]", channelName, msg, this);
   }
 
   private __handleAwaiter(subsKey: string, msg: unknown) {

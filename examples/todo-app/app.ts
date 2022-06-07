@@ -15,25 +15,26 @@ import { ITodo, ITodoErr, MESSAGES } from "./Messages";
     }
   }
 })();
-BMB.trace = true;
+
+//BMB.trace = true;
 
 @customElement("todo-app")
 export class TodoApp extends LitElement {
-  addTodoSubs: Subscription<Partial<ITodo>>;
+  errorSubscription: Subscription<ITodoErr>;
   constructor() {
     super();
-    BMB.Subscribe<ITodoErr>(
+    this.errorSubscription = BMB.Subscribe<ITodoErr>(
       MESSAGES.TODO_ERR,
       (err) => {
         console.log(err);
       },
       true
     );
-    this.addTodoSubs = BMB.Subscribe<Partial<ITodo>>(
-      MESSAGES.ADD_TODO,
-      undefined,
-      true
-    );
+  }
+
+  override disconnectedCallback(): void {
+    this.errorSubscription.dispose();
+    super.disconnectedCallback();
   }
 
   @query("#text")
@@ -42,7 +43,7 @@ export class TodoApp extends LitElement {
   override render() {
     return html`
       <div>
-        <input type="text" id="text" placeholder="Typoe here what to do" />
+        <input type="text" id="text" placeholder="Type here what to do" />
 
         <button @click=${this.addTodo}>Add</button>
       </div>
@@ -54,7 +55,9 @@ export class TodoApp extends LitElement {
     if (!this.txtInput) return;
     const text = this.txtInput?.value;
     if (!text || text === "") return;
-    this.addTodoSubs.publish({ text });
+
+    BMB.Broadcast<Partial<ITodo>>(MESSAGES.ADD_TODO, { text });
+
     this.txtInput.value = "";
     this.requestUpdate();
   }

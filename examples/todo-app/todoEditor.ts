@@ -1,55 +1,66 @@
 import { css, html, LitElement } from "lit";
-import { customElement, query } from "lit/decorators.js";
+import { customElement, query, state } from "lit/decorators.js";
 import { IModifyTodo, ITodo, MESSAGES } from "./Messages";
-import { SubscriptionController } from "browser-message-broker/dist/LitSubscriptionController";
+import { BMB, Subscription } from "browser-message-broker";
 
 @customElement("todo-editor")
 export class TodoEditor extends LitElement {
-  todoSelectedCtl: SubscriptionController<ITodo>;
-  modifyTodoCtl: SubscriptionController<IModifyTodo>;
-  todoModifiedCtl: SubscriptionController<ITodo>;
+  todoSelectedSubs: Subscription<ITodo>;
+  todoModifiedSubs: Subscription<ITodo>;
+  todoDeletedSubs: Subscription<ITodo>;
+  @state()
+  selectedTodo: ITodo | undefined = undefined;
+
+  override disconnectedCallback(): void {
+    this.todoSelectedSubs.dispose();
+    this.todoModifiedSubs.dispose();
+    this.todoDeletedSubs.dispose();
+    super.disconnectedCallback();
+  }
 
   constructor() {
     super();
-    this.todoSelectedCtl = new SubscriptionController<ITodo>(
-      this,
+
+    this.todoSelectedSubs = BMB.Subscribe<ITodo>(
       MESSAGES.TODO_SELECTED,
-      false,
+      this.onTodoSelected.bind(this),
+      true,
       true
     );
 
-    this.modifyTodoCtl = new SubscriptionController<IModifyTodo>(
-      this,
-      MESSAGES.MODIFY_TODO,
+    this.todoModifiedSubs = BMB.Subscribe<ITodo>(
+      MESSAGES.TODO_MODIFIED,
+      this.onTodoModified.bind(this),
       true,
       false
     );
 
-    this.todoModifiedCtl = new SubscriptionController<ITodo>(
-      this,
-      MESSAGES.TODO_MODIFIED,
+    this.todoDeletedSubs = BMB.Subscribe<ITodo>(
+      MESSAGES.TODO_DELETED,
+      this.onTodoModified.bind(this),
       true,
-      false,
-      (todo) => {
-        if (todo.id === this.todoSelectedCtl.state?.id)
-          this.todoSelectedCtl.subscription?.publish(null as unknown as ITodo);
-      }
+      false
     );
+  }
+
+  onTodoModified(msg: ITodo) {
+    if (this.selectedTodo && msg.id === this.selectedTodo.id)
+      this.selectedTodo = undefined;
+  }
+
+  onTodoSelected(msg: ITodo) {
+    this.selectedTodo = msg;
   }
 
   @query("#text")
   txtInput?: HTMLInputElement;
 
   override render() {
-    if (this.todoSelectedCtl.state)
+    if (this.selectedTodo)
       return html`
-        <div>Edit todo ${this.todoSelectedCtl.state.id}</div>
+        <div>Edit todo ${this.selectedTodo.id}</div>
         <div>
-          <input
-            type="text"
-            id="text"
-            value=${this.todoSelectedCtl.state.text}
-          />
+          <input type="text" id="text" value=${this.selectedTodo.text} />
           <button @click=${this.saveTodo}>save</button>
         </div>
       `;
@@ -57,12 +68,13 @@ export class TodoEditor extends LitElement {
   }
 
   saveTodo() {
-    if (!this.txtInput || !this.todoSelectedCtl.state) return;
+    if (!this.txtInput || !this.selectedTodo) return;
+
     const newText = this.txtInput?.value;
     if (!newText || newText === "") return;
-    console.log("publish saveTodo (in editor)");
-    this.modifyTodoCtl.subscription?.publish({
-      id: this.todoSelectedCtl.state.id,
+
+    BMB.Broadcast<IModifyTodo>(MESSAGES.MODIFY_TODO, {
+      id: this.selectedTodo.id,
       newText,
     });
   }
