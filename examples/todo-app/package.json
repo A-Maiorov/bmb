@@ -14,7 +14,7 @@
     "license": "MIT",
     "private": true,
     "dependencies": {
-        "browser-message-broker": "^0.0.2",
+        "browser-message-broker": "latest",
         "idb": "7.0.1",
         "lit": "2.2.5"
     },

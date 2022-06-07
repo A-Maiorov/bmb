@@ -5,7 +5,7 @@
 ![Tests](https://github.com/A-Maiorov/bmb/actions/workflows/test.yml/badge.svg)
 [![Published on npm](https://img.shields.io/npm/v/browser-message-broker.svg?logo=npm)](https://www.npmjs.com/package/browser-message-broker)
 
-BMB is a tiny message broker (only 1.4 kb compressed) that supports Publish/Subscribe messaging pattern across multiple scripting contexts of the same origin (Tabs, Ifames, Service Workers, Dedicated and Shared Worker). It uses [BroadcastChannel](https://developer.mozilla.org/en-US/docs/Web/API/BroadcastChannel#browser_compatibility) as a unified way of communication between different contexts.
+BMB is a tiny message broker (only 1.4 kb compressed) that supports Publish/Subscribe and Request/Reply messaging patterns across multiple scripting contexts of the same origin (Tabs, Ifames, Service Workers, Dedicated and Shared Worker). It uses [BroadcastChannel](https://developer.mozilla.org/en-US/docs/Web/API/BroadcastChannel#browser_compatibility) as a unified way of communication between different contexts.
 
 ## Potential use cases
 
@@ -50,10 +50,27 @@ Publish message
 myMessageSubscription.publish({ name: "Foo", greeting: "Hi!" });
 ```
 
-Or
+Or just publish without configuring subscription
 
 ```ts
-BMB.publish("my-message", { name: "Foo", greeting: "Hi!" });
+BMB.Publish("my-message", { name: "Foo", greeting: "Hi!" });
+```
+
+Request/Reply
+
+```ts
+type TReq = { reqPayload: string };
+type TRep = { respPayload: string };
+
+// Worker
+BMB.Reply<TReq>("reqRespTest", (req: TReq) => {
+  return { respPayload: "Hello " + req.reqPayload   } as TRep;
+});
+
+// Window
+const req: TReq = { reqPayload: "Bob" };
+const reply = await BMB.Request<TRep>("reqRespTest", req);
+console.log(reply)// { "respPayload": "Hello Bob" }
 ```
 
 Open two browser tabs and see message in DevTools console in both tabs

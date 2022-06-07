@@ -50,10 +50,27 @@ Publish message
 myMessageSubscription.publish({ name: "Foo", greeting: "Hi!" });
 ```
 
-Or
+Or just publish without configuring subscription
 
 ```ts
-BMB.publish("my-message", { name: "Foo", greeting: "Hi!" });
+BMB.Publish("my-message", { name: "Foo", greeting: "Hi!" });
+```
+
+Request/Reply
+
+```ts
+type TReq = { reqPayload: string };
+type TRep = { respPayload: string };
+
+// Worker
+BMB.Reply<TReq>("reqRespTest", (req: TReq) => {
+  return { respPayload: "Hello " + req.reqPayload   } as TRep;
+});
+
+// Window
+const req: TReq = { reqPayload: "Bob" };
+const reply = await BMB.Request<TRep>("reqRespTest", req);
+console.log(reply)// { "respPayload": "Hello Bob" }
 ```
 
 Open two browser tabs and see message in DevTools console in both tabs
