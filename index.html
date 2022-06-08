@@ -24,15 +24,15 @@
                     credentials: "same-origin",
                 });
                 } catch (err) {
-                console.log("sharedWorker registration failed: ", err);
+                    console.log("sharedWorker registration failed: ", err);
                 }
             }
         })();
     </script>
 </head>
 <body>    
-    <iframe id="editor" sandbox="allow-same-origin allow-scripts allow-top-navigation" src="examples/todo-app/todoEditor.index.html"></iframe>  
+    <iframe id="editor" sandbox="allow-same-origin allow-scripts allow-top-navigation" src="examples/todo-app/todoEditorIndex.html"></iframe>  
     <todo-app></todo-app>     
-    <iframe id="list" sandbox="allow-same-origin allow-scripts allow-top-navigation" src="examples/todo-app/todoList.index.html"></iframe>
+    <iframe id="list" sandbox="allow-same-origin allow-scripts allow-top-navigation" src="examples/todo-app/todoListIndex.html"></iframe>
 </body>
 </html>
