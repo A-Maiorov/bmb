@@ -4,12 +4,17 @@ import { ITodo, MESSAGES } from "./Messages";
 import { BMB } from "browser-message-broker";
 import { TodoListController } from "./todoList.controller";
 
-BMB.ConfigureChannel(MESSAGES.DATA_SOURCE_READY, true, true, false);
+BMB.ConfigureChannel(
+  MESSAGES.DATA_SOURCE_READY,
+  true,
+  true,
+  false
+);
 
 @customElement("todo-list")
 export class TodoList extends LitElement {
   @state()
-  allTodos: ITodo[] = BMB.GetState(MESSAGES.ALL_TODOS) || [];
+  allTodos: ITodo[] = [];
 
   controller = new TodoListController(this);
 
@@ -20,18 +25,21 @@ export class TodoList extends LitElement {
           (todo) => html`
             <li ?data-isDone=${todo.isDone}>
               <button
-                @click=${() => this.controller.completeTodo(todo)}
+                @click=${() =>
+                  this.controller.completeTodo(todo)}
                 class="check"
               >
                 ✔
               </button>
               <span
-                @click=${() => this.controller.selectTodo(todo)}
+                @click=${() =>
+                  this.controller.selectTodo(todo)}
                 class="text"
                 >${todo.text}</span
               >
               <button
-                @click=${() => this.controller.deleteTodo(todo)}
+                @click=${() =>
+                  this.controller.deleteTodo(todo)}
                 class="delete"
               >
                 ❌

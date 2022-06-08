@@ -22,7 +22,6 @@ export const MESSAGES = {
   DEL_TODO: "delTodo",
   TODO_DELETED: "todoDeleted",
   GET_ALL_TODOS: "getAllTodos",
-  ALL_TODOS: "allTodos",
   TODO_SELECTED: "todoSelected",
 
   CHECK_DATA_SOURCE: "checkDataSource",

@@ -1,6 +1,11 @@
 import { openDB } from "idb";
 import { BMB } from "browser-message-broker";
-import { IModifyTodo, ITodo, ITodoErr, MESSAGES } from "./Messages";
+import {
+  IModifyTodo,
+  ITodo,
+  ITodoErr,
+  MESSAGES,
+} from "./Messages";
 
 const errSubscription = BMB.Subscribe<ITodoErr>(
   MESSAGES.TODO_ERR,
@@ -26,12 +31,6 @@ const modifiedSubscription = BMB.Subscribe<ITodo>(
   true,
   false
 );
-const allSubscription = BMB.Subscribe<ITodo[]>(
-  MESSAGES.ALL_TODOS,
-  undefined,
-  true,
-  false
-);
 
 const dbProm = openDB("Todos", 1, {
   upgrade(db) {
@@ -43,17 +42,42 @@ const dbProm = openDB("Todos", 1, {
   },
 });
 
-BMB.Subscribe(MESSAGES.ADD_TODO, handleAddTodo, true, false);
-BMB.Subscribe(MESSAGES.COMPLETE_TODO, handleCompleteTodo, true, false);
-BMB.Subscribe(MESSAGES.DEL_TODO, handleDeleteTodo, true, false);
-BMB.Subscribe(MESSAGES.MODIFY_TODO, handleModifyTodo, true, false);
-BMB.Subscribe(MESSAGES.GET_ALL_TODOS, handleGetAllTodos, true, false);
+BMB.Subscribe(
+  MESSAGES.ADD_TODO,
+  handleAddTodo,
+  true,
+  false
+);
+BMB.Subscribe(
+  MESSAGES.COMPLETE_TODO,
+  handleCompleteTodo,
+  true,
+  false
+);
+BMB.Subscribe(
+  MESSAGES.DEL_TODO,
+  handleDeleteTodo,
+  true,
+  false
+);
+BMB.Subscribe(
+  MESSAGES.MODIFY_TODO,
+  handleModifyTodo,
+  true,
+  false
+);
 
-async function handleGetAllTodos(_: undefined, senderId?: string) {
+BMB.Reply<undefined>(
+  MESSAGES.GET_ALL_TODOS,
+  handleGetAllTodos,
+  true
+);
+
+async function handleGetAllTodos(_: undefined) {
   try {
     const db = await dbProm;
     const todos = (await db.getAll("todo")) as ITodo[];
-    allSubscription.publish(todos, senderId);
+    return todos;
   } catch (err) {
     console.log(err);
     errSubscription.publish({
@@ -61,6 +85,7 @@ async function handleGetAllTodos(_: undefined, senderId?: string) {
       context: {},
     });
   }
+  return undefined;
 }
 
 async function handleModifyTodo(msg: IModifyTodo) {
@@ -113,7 +138,10 @@ async function handleAddTodo(todo: Partial<ITodo>) {
     });
     return;
   }
-  const newTodo: Partial<ITodo> = { text: todo.text, isDone: false };
+  const newTodo: Partial<ITodo> = {
+    text: todo.text,
+    isDone: false,
+  };
 
   try {
     const db = await dbProm;
@@ -128,5 +156,10 @@ async function handleAddTodo(todo: Partial<ITodo>) {
   }
 }
 
-BMB.ConfigureChannel(MESSAGES.DATA_SOURCE_READY, true, true, false);
+BMB.ConfigureChannel(
+  MESSAGES.DATA_SOURCE_READY,
+  true,
+  true,
+  false
+);
 BMB.Broadcast(MESSAGES.DATA_SOURCE_READY, true);
