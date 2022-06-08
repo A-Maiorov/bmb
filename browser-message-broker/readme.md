@@ -10,12 +10,21 @@ BMB is a tiny message broker (only about 2 kb compressed) that supports Publish/
 ## Potential use cases
 
 - Communication between independent scripts or web components or micro frontends
-- Communication between multiple tabs and workers
+- Communication between multiple tabs and workers or iframes
 
 ## Features
 
-- Unified api to to send messages within single scripting contexts and/or bridge them to other contexts
+- Publish/Subscribe
+- Request/Reply
 - Messages caching and automatic synchronisation of the contexts
+
+## Examples
+
+See `/examples/todo-app` in this repo
+
+[Todo-app example readme](/examples/todo-app/readme.md)
+
+[Demo](https://a-maiorov.github.io/bmb/)
 
 ## Getting started
 
@@ -31,6 +40,8 @@ Import:
 import { BMB } from "browser-message-broker";
 BMB.trace = true; //enable logging messages to the console
 ```
+
+### Publish/Subscribe
 
 Configure subscription
 
@@ -50,7 +61,7 @@ Publish message
 myMessageSubscription.publish({ name: "Foo", greeting: "Hi!" });
 ```
 
-Or just publish without configuring subscription
+**Or,** just publish without configuring subscription
 
 ```ts
 BMB.Publish("my-message", { name: "Foo", greeting: "Hi!" });
@@ -62,7 +73,7 @@ Request/Reply
 type TReq = { reqPayload: string };
 type TRep = { respPayload: string };
 
-// Worker
+// Shared Worker
 BMB.Reply<TReq>("reqRespTest", (req: TReq) => {
   return { respPayload: "Hello " + req.reqPayload   } as TRep;
 });
@@ -72,11 +83,3 @@ const req: TReq = { reqPayload: "Bob" };
 const reply = await BMB.Request<TRep>("reqRespTest", req);
 console.log(reply)// { "respPayload": "Hello Bob" }
 ```
-
-Open two browser tabs and see message in DevTools console in both tabs
-
-## Examples
-
-See `/examples/todo-app` in this repo
-
-[Todo-app example readme](/examples/todo-app/readme.md)
