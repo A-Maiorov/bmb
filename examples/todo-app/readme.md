@@ -9,6 +9,8 @@ This is a minimalistic spa that consists of several independent components:
 
 All components are bundled in separate js files and completely independent
 
+**todo-list** and **todo-app** are loaded in iframes
+
 **sharedWorker** is registered via todo-app component and serves as a DAL and single source of truth for browser tabs
 
 ## Getting started
