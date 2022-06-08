@@ -5,7 +5,7 @@
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
     <title>Todo Appp</title>
     <meta name='viewport' content='width=device-width, initial-scale=1'>  
-    <script src='app.js' module async></script>    
+    <script src='examples/todo-app/app.js' module async></script>    
     <style>
         #editor{
             height: 60px;
@@ -19,7 +19,7 @@
         (async () => {
             if ("SharedWorker" in window) {
                 try {
-                new SharedWorker("sharedWorker.js", {
+                new SharedWorker("examples/todo-app/sharedWorker.js", {
                     name: "todo-app-worker",
                     credentials: "same-origin",
                 });
@@ -31,8 +31,8 @@
     </script>
 </head>
 <body>    
-    <iframe id="editor" sandbox="allow-same-origin allow-scripts allow-top-navigation" src="/todoEditor.index.html"></iframe>  
+    <iframe id="editor" sandbox="allow-same-origin allow-scripts allow-top-navigation" src="examples/todo-app/todoEditor.index.html"></iframe>  
     <todo-app></todo-app>     
-    <iframe id="list" sandbox="allow-same-origin allow-scripts allow-top-navigation" src="/todoList.index.html"></iframe>
+    <iframe id="list" sandbox="allow-same-origin allow-scripts allow-top-navigation" src="examples/todo-app/todoList.index.html"></iframe>
 </body>
 </html>

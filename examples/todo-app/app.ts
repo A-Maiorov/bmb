@@ -3,21 +3,6 @@ import { css, CSSResultGroup, html, LitElement } from "lit";
 import { customElement, query } from "lit/decorators.js";
 import { ITodo, ITodoErr, MESSAGES } from "./Messages";
 
-(async () => {
-  if ("SharedWorker" in window) {
-    try {
-      new SharedWorker("sharedWorker.js", {
-        name: "todo-app-worker",
-        credentials: "same-origin",
-      });
-    } catch (err) {
-      console.log("sharedWorker registration failed: ", err);
-    }
-  }
-})();
-
-//BMB.trace = true;
-
 @customElement("todo-app")
 export class TodoApp extends LitElement {
   errorSubscription: Subscription<ITodoErr>;
@@ -43,7 +28,11 @@ export class TodoApp extends LitElement {
   override render() {
     return html`
       <div>
-        <input type="text" id="text" placeholder="Type here what to do" />
+        <input
+          type="text"
+          id="text"
+          placeholder="Type here what to do"
+        />
 
         <button @click=${this.addTodo}>Add</button>
       </div>
@@ -56,7 +45,9 @@ export class TodoApp extends LitElement {
     const text = this.txtInput?.value;
     if (!text || text === "") return;
 
-    BMB.Broadcast<Partial<ITodo>>(MESSAGES.ADD_TODO, { text });
+    BMB.Broadcast<Partial<ITodo>>(MESSAGES.ADD_TODO, {
+      text,
+    });
 
     this.txtInput.value = "";
     this.requestUpdate();
