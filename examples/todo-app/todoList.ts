@@ -1,15 +1,13 @@
 import { css, html, LitElement } from "lit";
 import { customElement, state } from "lit/decorators.js";
 import { ITodo, MESSAGES } from "./Messages";
-import { BMB } from "browser-message-broker";
+import { PubSubChannel } from "browser-message-broker";
 import { TodoListController } from "./todoList.controller";
 
-BMB.ConfigureChannel(
-  MESSAGES.DATA_SOURCE_READY,
-  true,
-  true,
-  false
-);
+PubSubChannel.getOrCreate(MESSAGES.DATA_SOURCE_READY, {
+  enableBroadcast: true,
+  enableCaching: true,
+});
 
 @customElement("todo-list")
 export class TodoList extends LitElement {

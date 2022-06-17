@@ -1,27 +1,18 @@
-import { BMB, Subscription } from "browser-message-broker";
+import { PubSubChannel } from "browser-message-broker";
 import { css, CSSResultGroup, html, LitElement } from "lit";
 import { customElement, query } from "lit/decorators.js";
 import { ITodo, ITodoErr, MESSAGES } from "./Messages";
 
+const errorChannel = PubSubChannel.getOrCreate<ITodoErr>(
+  MESSAGES.TODO_ERR,
+  { enableBroadcast: true, enableCaching: false }
+);
+errorChannel.subscribe((err) => {
+  console.log(err);
+});
+
 @customElement("todo-app")
 export class TodoApp extends LitElement {
-  errorSubscription: Subscription<ITodoErr>;
-  constructor() {
-    super();
-    this.errorSubscription = BMB.Subscribe<ITodoErr>(
-      MESSAGES.TODO_ERR,
-      (err) => {
-        console.log(err);
-      },
-      true
-    );
-  }
-
-  override disconnectedCallback(): void {
-    this.errorSubscription.dispose();
-    super.disconnectedCallback();
-  }
-
   @query("#text")
   txtInput?: HTMLInputElement;
 
@@ -45,9 +36,10 @@ export class TodoApp extends LitElement {
     const text = this.txtInput?.value;
     if (!text || text === "") return;
 
-    BMB.Broadcast<Partial<ITodo>>(MESSAGES.ADD_TODO, {
-      text,
-    });
+    PubSubChannel.broadcast<Partial<ITodo>>(
+      MESSAGES.ADD_TODO,
+      { text }
+    );
 
     this.txtInput.value = "";
     this.requestUpdate();

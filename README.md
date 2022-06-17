@@ -34,52 +34,74 @@ Install:
 npm install browser-message-broker --save
 ```
 
-Import:
-
-```js
-import { BMB } from "browser-message-broker";
-BMB.trace = true; //enable logging messages to the console
-```
-
 ### Publish/Subscribe
 
-Configure subscription
+MyMessageProducer.ts
 
 ```ts
+import { PubSubChannel, ReqRepChannel } from "browser-message-broker";
 type MyMessage = { name: string; greeting: string }
-const myMessageSubscription = BMB.Subscribe<MyMessage>(
-  "my-message", //message name
-  (msg)=> console.log(msg), //handler, msg will be of type MyMessage
-  true, //enableBroadcast
-  false //enableCaching
+const MyMessageChannel = PubSubChannel.getOrCreate<MyMessage>(
+  "MyMessage", {
+    enableBroadcast: true,
+    enableCaching: false,
+    trace: false
+  }
 );
+
+MyMessageChannel.publish({ name: "Foo", greeting: "Hi!" });
 ```
 
-Publish message
+> **Or,** just publish/broadcast using default channel settings
 
 ```ts
-myMessageSubscription.publish({ name: "Foo", greeting: "Hi!" });
+PubSubChannel.publish("MyMessage", { name: "Foo", greeting: "Hi!" });
+//or
+PubSubChannel.broadcast("MyMessage", { name: "Foo", greeting: "Hi!" });
 ```
 
-**Or,** just publish without configuring subscription
+MyMessageConsumer.ts
 
 ```ts
-BMB.Publish("my-message", { name: "Foo", greeting: "Hi!" });
+import { PubSubChannel, ReqRepChannel } from "browser-message-broker";
+type MyMessage = { name: string; greeting: string }
+const MyMessageChannel = PubSubChannel.getOrCreate<MyMessage>(
+  "MyMessage", {
+    enableBroadcast: true,
+    enableCaching: false,
+    trace: false
+  }
+);
+
+MyMessageChannel.subscribe((msg: MyMessage)=>{
+    console.log(msg)
+})
 ```
 
 Request/Reply
 
 ```ts
+import { PubSubChannel, ReqRepChannel } from "browser-message-broker";
+
 type TReq = { reqPayload: string };
 type TRep = { respPayload: string };
 
-// Shared Worker
-BMB.Reply<TReq>("reqRespTest", (req: TReq) => {
-  return { respPayload: "Hello " + req.reqPayload   } as TRep;
+// Shared Worker (consumer)
+ReqRepChannel.getOrCreate<TReq, TRep>(
+  "GetData", 
+  { enableBroadcast: true }
+).reply((req: TReq)=>{
+  return  { respPayload: "Hello " + req.reqPayload   }
 });
 
-// Window
+// Window (producer)
 const req: TReq = { reqPayload: "Bob" };
-const reply = await BMB.Request<TRep>("reqRespTest", req);
+
+const reply: TResp = 
+await ReqRepChannel.getOrCreate<TReq, TRep>(
+ "GetData", 
+ { enableBroadcast: true }
+).request(undefined);
+
 console.log(reply)// { "respPayload": "Hello Bob" }
 ```

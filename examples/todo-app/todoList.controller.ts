@@ -1,4 +1,8 @@
-import { BMB, Subscription } from "browser-message-broker";
+import {
+  PubSubChannel,
+  ReqRepChannel,
+  Disposer,
+} from "browser-message-broker";
 import { ReactiveController } from "lit";
 import { ITodo, MESSAGES } from "./Messages";
 import type { TodoList } from "./todoList";
@@ -7,33 +11,40 @@ export class TodoListController
   implements ReactiveController
 {
   private host: TodoList;
-  private todoAddedSubs: Subscription<ITodo>;
-  private todoModifiedSubs: Subscription<ITodo>;
-  private todoDeletedSubs: Subscription<ITodo>;
+  private disposeTodoAdded: Disposer;
+  private disposeTodoModified: Disposer;
+  private disposeTodoDeleted: Disposer;
 
   constructor(host: TodoList) {
     this.host = host;
     host.addController(this);
 
-    this.todoAddedSubs = BMB.Subscribe(
-      MESSAGES.TODO_ADDED,
-      this.onTodoAdded.bind(this),
-      true,
-      false
-    );
+    this.disposeTodoAdded =
+      PubSubChannel.getOrCreate<ITodo>(
+        MESSAGES.TODO_ADDED,
+        {
+          enableBroadcast: true,
+          enableCaching: false,
+        }
+      ).subscribe(this.onTodoAdded.bind(this));
 
-    this.todoModifiedSubs = BMB.Subscribe(
-      MESSAGES.TODO_MODIFIED,
-      this.onTodoModified.bind(this),
-      true,
-      false
-    );
-    this.todoDeletedSubs = BMB.Subscribe(
-      MESSAGES.TODO_DELETED,
-      this.onTodoDeleted.bind(this),
-      true,
-      false
-    );
+    this.disposeTodoModified =
+      PubSubChannel.getOrCreate<ITodo>(
+        MESSAGES.TODO_MODIFIED,
+        {
+          enableBroadcast: true,
+          enableCaching: false,
+        }
+      ).subscribe(this.onTodoModified.bind(this));
+
+    this.disposeTodoDeleted =
+      PubSubChannel.getOrCreate<ITodo>(
+        MESSAGES.TODO_DELETED,
+        {
+          enableBroadcast: true,
+          enableCaching: false,
+        }
+      ).subscribe(this.onTodoDeleted.bind(this));
   }
 
   onTodoAdded(todo: ITodo) {
@@ -64,35 +75,39 @@ export class TodoListController
   }
 
   completeTodo(t: ITodo) {
-    BMB.Broadcast(MESSAGES.COMPLETE_TODO, t);
+    PubSubChannel.broadcast(MESSAGES.COMPLETE_TODO, t);
   }
 
   deleteTodo(t: ITodo) {
-    BMB.Broadcast(MESSAGES.DEL_TODO, t);
+    PubSubChannel.broadcast(MESSAGES.DEL_TODO, t);
   }
 
   selectTodo(t: ITodo) {
-    BMB.Broadcast(MESSAGES.TODO_SELECTED, t);
+    PubSubChannel.broadcast(MESSAGES.TODO_SELECTED, t);
   }
 
   async hostConnected() {
-    const dsIsReady = BMB.GetState<boolean>(
+    const dsIsReady = PubSubChannel.GetState<boolean>(
       MESSAGES.DATA_SOURCE_READY
     );
     if (!dsIsReady)
-      await BMB.nextMessage(MESSAGES.DATA_SOURCE_READY);
+      await PubSubChannel.nextMessage(
+        MESSAGES.DATA_SOURCE_READY
+      );
 
-    const todos = await BMB.Request<ITodo[]>(
-      MESSAGES.GET_ALL_TODOS,
+    const todos = await ReqRepChannel.getOrCreate<
       undefined,
-      true
-    );
+      ITodo[]
+    >(MESSAGES.GET_ALL_TODOS, {
+      enableBroadcast: true,
+    }).request(undefined);
+
     this.host.allTodos = todos || [];
   }
 
   hostDisconnected() {
-    this.todoAddedSubs.dispose();
-    this.todoModifiedSubs.dispose();
-    this.todoDeletedSubs.dispose();
+    this.disposeTodoAdded();
+    this.disposeTodoModified();
+    this.disposeTodoDeleted();
   }
 }

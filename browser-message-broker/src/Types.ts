@@ -1,23 +1,32 @@
+export type Disposer = () => void;
 export interface IChannel {
   type: "pubSub" | "reqRep";
   dispose: () => void;
   name: string;
-  isBroadcast?: boolean;
+  settings: ChannelSettings;
 }
-
+export type ChannelSettings = {
+  enableBroadcast?: boolean;
+  enableCaching?: boolean;
+  trace?: boolean;
+} & {};
 export interface IPubSubChannel<TMsg> extends IChannel {
-  publish: (msg: TMsg, targetId?: string) => Promise<void>;
-  subscribe(handler: THandler<TMsg>): Subscription<TMsg>;
+  send: (msg: TMsg, targetId?: string) => Promise<void>;
+  subscribe(handler: THandler<TMsg>): Disposer;
   getState: () => TMsg | undefined;
   nextMessage: () => Promise<TMsg>;
-  isCached: boolean;
   type: "pubSub";
 }
 
-export interface IReqRepChannel<TReq = unknown, TRep = unknown>
-  extends IChannel {
-  request: (msg: TReq, targetId?: string) => Promise<TRep | undefined>;
-  reply: (handler: (req: TReq) => TRep) => ReqSubscription;
+export interface IReqRepChannel<
+  TReq = unknown,
+  TRep = unknown
+> extends IChannel {
+  request: (
+    msg: TReq,
+    targetId?: string
+  ) => Promise<TRep | undefined>;
+  reply: (handler: (req: TReq) => TRep) => Disposer;
   type: "reqRep";
 }
 
@@ -29,14 +38,17 @@ export interface Subscription<T> {
   isDisposed?: boolean;
   isBroadcast?: boolean;
 }
-export interface ReqSubscription<TReq = unknown, TRep = unknown> {
+export interface ReqSubscription<
+  TReq = unknown,
+  TRep = unknown
+> {
   channelName: string;
   isDisposed: boolean;
   isBroadcast?: boolean;
   handler: (r: TReq, targetId?: string) => TRep;
   dispose: () => void;
 }
-export type THandler<T = unknown> = (
+export type THandler<T = any> = (
   msg: T,
   senderId?: string
 ) => void | Promise<void>;
@@ -44,9 +56,14 @@ export type THandler<T = unknown> = (
 export interface IBroker {
   state: Map<string, any>;
   subscribers: Map<string, THandler[]>;
+  requestListeners: Map<string, ReqSubscription>;
+
   trace: boolean;
   braodcasts: Set<string>;
-  GetState<IStateItem>(channelName: string): IStateItem | undefined;
+  GetState<IStateItem>(
+    channelName: string
+  ): IStateItem | undefined;
+
   ConfigureChannel(
     channelName: string,
     enableBroadcast: boolean,
@@ -83,7 +100,7 @@ export interface IBroker {
 }
 
 export type ChannelType = "pubSub" | "req" | "rep" | "sync";
-export interface IBroadcastEnvelope<T = unknown> {
+export interface IBroadcastEnvelope<T = any> {
   senderId: string;
   targetId?: string;
   channelName: string;

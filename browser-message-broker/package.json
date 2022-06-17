@@ -2,7 +2,7 @@
     "name": "browser-message-broker",
     "version": "0.0.4",
     "description": "Simple message broker",
-    "main": "dist/Broker.js",
+    "main": "dist/Module.js",
     "type": "module",
     "scripts": {
         "build": "tsc && node build.js"

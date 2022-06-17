@@ -1,4 +1,4 @@
-import { BMB } from "browser-message-broker";
+import { ReqRepChannel } from "browser-message-broker";
 import { expect } from "@open-wc/testing";
 
 describe("Browser Message Broker subscriber", () => {
@@ -8,16 +8,25 @@ describe("Browser Message Broker subscriber", () => {
 
     const requestStr = "request";
     const responseStr = "response";
+    const channelName = "reqRespTest";
 
     //Arrange listener before making request
-    BMB.Reply<TReq>("reqRespTest", (req: TReq) => {
-      return { respPayload: req.reqPayload + responseStr } as TRep;
+    const channel = ReqRepChannel.getOrCreate<TReq, TRep>(
+      channelName,
+      {}
+    );
+    channel.reply((req: TReq) => {
+      return {
+        respPayload: req.reqPayload + responseStr,
+      } as TRep;
     });
 
     const req: TReq = { reqPayload: requestStr };
-    const reply = await BMB.Request<TRep>("reqRespTest", req);
+    const reply = await channel.request(req);
 
     expect(reply).to.be.not.undefined;
-    expect((reply as TRep).respPayload).to.equal(requestStr + responseStr);
+    expect((reply as TRep).respPayload).to.equal(
+      requestStr + responseStr
+    );
   });
 });

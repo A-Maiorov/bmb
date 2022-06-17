@@ -1,50 +1,64 @@
 import { css, html, LitElement } from "lit";
-import { customElement, query, state } from "lit/decorators.js";
+import {
+  customElement,
+  query,
+  state,
+} from "lit/decorators.js";
 import { IModifyTodo, ITodo, MESSAGES } from "./Messages";
-import { BMB, Subscription } from "browser-message-broker";
+import { PubSubChannel } from "browser-message-broker";
+import { Disposer } from "browser-message-broker/dist/Types";
 
 @customElement("todo-editor")
 export class TodoEditor extends LitElement {
-  todoSelectedSubs: Subscription<ITodo>;
-  todoModifiedSubs: Subscription<ITodo>;
-  todoDeletedSubs: Subscription<ITodo>;
+  disposeTodoSelected: Disposer;
+  disposeTodoModified: Disposer;
+  disposeTodoDeleted: Disposer;
   @state()
   selectedTodo: ITodo | undefined = undefined;
 
   override disconnectedCallback(): void {
-    this.todoSelectedSubs.dispose();
-    this.todoModifiedSubs.dispose();
-    this.todoDeletedSubs.dispose();
+    this.disposeTodoSelected();
+    this.disposeTodoModified();
+    this.disposeTodoDeleted();
     super.disconnectedCallback();
   }
 
   constructor() {
     super();
 
-    this.todoSelectedSubs = BMB.Subscribe<ITodo>(
-      MESSAGES.TODO_SELECTED,
-      this.onTodoSelected.bind(this),
-      true,
-      true
-    );
+    this.disposeTodoSelected =
+      PubSubChannel.getOrCreate<ITodo>(
+        MESSAGES.TODO_SELECTED,
+        {
+          enableBroadcast: true,
+          enableCaching: true,
+        }
+      ).subscribe(this.onTodoSelected.bind(this));
 
-    this.todoModifiedSubs = BMB.Subscribe<ITodo>(
-      MESSAGES.TODO_MODIFIED,
-      this.onTodoModified.bind(this),
-      true,
-      false
-    );
+    this.disposeTodoModified =
+      PubSubChannel.getOrCreate<ITodo>(
+        MESSAGES.TODO_MODIFIED,
+        {
+          enableBroadcast: true,
+          enableCaching: true,
+        }
+      ).subscribe(this.onTodoModified.bind(this));
 
-    this.todoDeletedSubs = BMB.Subscribe<ITodo>(
-      MESSAGES.TODO_DELETED,
-      this.onTodoModified.bind(this),
-      true,
-      false
-    );
+    this.disposeTodoDeleted =
+      PubSubChannel.getOrCreate<ITodo>(
+        MESSAGES.TODO_DELETED,
+        {
+          enableBroadcast: true,
+          enableCaching: false,
+        }
+      ).subscribe(this.onTodoModified.bind(this));
   }
 
   onTodoModified(msg: ITodo) {
-    if (this.selectedTodo && msg.id === this.selectedTodo.id)
+    if (
+      this.selectedTodo &&
+      msg.id === this.selectedTodo.id
+    )
       this.selectedTodo = undefined;
   }
 
@@ -60,7 +74,11 @@ export class TodoEditor extends LitElement {
       return html`
         <div>Edit todo ${this.selectedTodo.id}</div>
         <div>
-          <input type="text" id="text" value=${this.selectedTodo.text} />
+          <input
+            type="text"
+            id="text"
+            value=${this.selectedTodo.text}
+          />
           <button @click=${this.saveTodo}>save</button>
         </div>
       `;
@@ -73,10 +91,13 @@ export class TodoEditor extends LitElement {
     const newText = this.txtInput?.value;
     if (!newText || newText === "") return;
 
-    BMB.Broadcast<IModifyTodo>(MESSAGES.MODIFY_TODO, {
-      id: this.selectedTodo.id,
-      newText,
-    });
+    PubSubChannel.broadcast<IModifyTodo>(
+      MESSAGES.MODIFY_TODO,
+      {
+        id: this.selectedTodo.id,
+        newText,
+      }
+    );
   }
 
   static override styles = css`

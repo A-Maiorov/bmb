@@ -1,31 +1,33 @@
-import { BMB } from "browser-message-broker";
+import {
+  PubSubChannel,
+  ReqRepChannel,
+} from "browser-message-broker";
 import {
   PUB_SUB_REQUEST_SUBSCRIPTION_KEY,
   PUB_SUB_RESPONSE_SUBSCRIPTION_KEY,
   REQ_REP_CHANNEL_NAME,
 } from "./constants";
 
-const pubSubChannelToWindow = BMB.Subscribe(
-  PUB_SUB_RESPONSE_SUBSCRIPTION_KEY,
-  undefined,
-  true
-);
-
-BMB.Subscribe(
+PubSubChannel.getOrCreate(
   PUB_SUB_REQUEST_SUBSCRIPTION_KEY,
-  (_) => {
-    pubSubChannelToWindow.publish({ payload: "response" });
-  },
-  true
-);
+  {
+    enableBroadcast: true,
+  }
+).subscribe((_) => {
+  PubSubChannel.broadcast(
+    PUB_SUB_RESPONSE_SUBSCRIPTION_KEY,
+    { payload: "response" }
+  );
+});
 
-BMB.Reply(
-  REQ_REP_CHANNEL_NAME,
-  (req: { payload: string }) => {
-    return { payload: req.payload + "response" };
-  },
-  true
-);
+ReqRepChannel.getOrCreate<
+  { payload: string },
+  { payload: string }
+>(REQ_REP_CHANNEL_NAME, {
+  enableBroadcast: true,
+}).reply((req) => {
+  return { payload: req.payload + "response" };
+});
 
 //let window know that worker is ready and execute test
 postMessage("ready");

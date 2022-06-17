@@ -1,5 +1,8 @@
 import { openDB } from "idb";
-import { BMB } from "browser-message-broker";
+import {
+  PubSubChannel,
+  ReqRepChannel,
+} from "browser-message-broker";
 import {
   IModifyTodo,
   ITodo,
@@ -7,30 +10,31 @@ import {
   MESSAGES,
 } from "./Messages";
 
-const errSubscription = BMB.Subscribe<ITodoErr>(
+const errChannel = PubSubChannel.getOrCreate<ITodoErr>(
   MESSAGES.TODO_ERR,
-  undefined,
-  true
+  {
+    enableBroadcast: true,
+    enableCaching: false,
+  }
 );
 
-const addedSubscription = BMB.Subscribe<ITodo>(
+const todoAddedChannel = PubSubChannel.getOrCreate<ITodo>(
   MESSAGES.TODO_ADDED,
-  undefined,
-  true,
-  false //in order to avoid publishing this state to remote brokers on sync
+  {
+    enableBroadcast: true,
+    enableCaching: false, //in order to avoid publishing this state to remote brokers on sync
+  }
 );
-const deletedSubscription = BMB.Subscribe<ITodo>(
+
+const todoDeletedChannel = PubSubChannel.getOrCreate<ITodo>(
   MESSAGES.TODO_DELETED,
-  undefined,
-  true,
-  false
+  { enableBroadcast: true, enableCaching: false }
 );
-const modifiedSubscription = BMB.Subscribe<ITodo>(
-  MESSAGES.TODO_MODIFIED,
-  undefined,
-  true,
-  false
-);
+const todoModifiedChannel =
+  PubSubChannel.getOrCreate<ITodo>(MESSAGES.TODO_MODIFIED, {
+    enableBroadcast: true,
+    enableCaching: false,
+  });
 
 const dbProm = openDB("Todos", 1, {
   upgrade(db) {
@@ -42,36 +46,35 @@ const dbProm = openDB("Todos", 1, {
   },
 });
 
-BMB.Subscribe(
+PubSubChannel.getOrCreate<Partial<ITodo>>(
   MESSAGES.ADD_TODO,
-  handleAddTodo,
-  true,
-  false
-);
-BMB.Subscribe(
-  MESSAGES.COMPLETE_TODO,
-  handleCompleteTodo,
-  true,
-  false
-);
-BMB.Subscribe(
-  MESSAGES.DEL_TODO,
-  handleDeleteTodo,
-  true,
-  false
-);
-BMB.Subscribe(
-  MESSAGES.MODIFY_TODO,
-  handleModifyTodo,
-  true,
-  false
-);
+  { enableBroadcast: true, enableCaching: false }
+).subscribe(handleAddTodo);
 
-BMB.Reply<undefined>(
+PubSubChannel.getOrCreate<ITodo>(MESSAGES.COMPLETE_TODO, {
+  enableBroadcast: true,
+  enableCaching: false,
+}).subscribe(handleCompleteTodo);
+
+PubSubChannel.getOrCreate<ITodo>(MESSAGES.DEL_TODO, {
+  enableBroadcast: true,
+  enableCaching: false,
+}).subscribe(handleDeleteTodo);
+
+PubSubChannel.getOrCreate<IModifyTodo>(
+  MESSAGES.MODIFY_TODO,
+  {
+    enableBroadcast: true,
+    enableCaching: false,
+  }
+).subscribe(handleModifyTodo);
+
+ReqRepChannel.getOrCreate<undefined>(
   MESSAGES.GET_ALL_TODOS,
-  handleGetAllTodos,
-  true
-);
+  {
+    enableBroadcast: true,
+  }
+).reply(handleGetAllTodos);
 
 async function handleGetAllTodos(_: undefined) {
   try {
@@ -80,7 +83,7 @@ async function handleGetAllTodos(_: undefined) {
     return todos;
   } catch (err) {
     console.log(err);
-    errSubscription.publish({
+    errChannel.send({
       message: `Can't get all todos`,
       context: {},
     });
@@ -94,9 +97,9 @@ async function handleModifyTodo(msg: IModifyTodo) {
     const todo = (await db.get("todo", msg.id)) as ITodo;
     todo.text = msg.newText;
     await db.put("todo", todo);
-    modifiedSubscription.publish(todo);
+    todoModifiedChannel.send(todo);
   } catch {
-    errSubscription.publish({
+    errChannel.send({
       message: `Can't modify todo. Change: text = '${msg.newText}'`,
       context: { id: msg.id },
     });
@@ -107,9 +110,9 @@ async function handleDeleteTodo(todo: ITodo) {
   try {
     const db = await dbProm;
     await db.delete("todo", todo.id);
-    deletedSubscription.publish(todo);
+    todoDeletedChannel.send(todo);
   } catch {
-    errSubscription.publish({
+    errChannel.send({
       message: "Can't delete todo",
       context: todo,
     });
@@ -121,9 +124,9 @@ async function handleCompleteTodo(todo: ITodo) {
     const db = await dbProm;
     await db.put("todo", { ...todo, isDone: true });
     todo.isDone = true;
-    modifiedSubscription.publish(todo);
+    todoModifiedChannel.send(todo);
   } catch {
-    errSubscription.publish({
+    errChannel.send({
       message: "Can't complete todo",
       context: todo,
     });
@@ -132,7 +135,7 @@ async function handleCompleteTodo(todo: ITodo) {
 
 async function handleAddTodo(todo: Partial<ITodo>) {
   if (!todo.text || todo.text === "") {
-    errSubscription.publish({
+    errChannel.send({
       context: todo,
       message: "Can't add todo without text",
     });
@@ -147,19 +150,16 @@ async function handleAddTodo(todo: Partial<ITodo>) {
     const db = await dbProm;
     const key = (await db.add("todo", newTodo)) as number;
     newTodo.id = key;
-    addedSubscription.publish(newTodo as ITodo);
+    todoAddedChannel.send(newTodo as ITodo);
   } catch (err) {
-    errSubscription.publish({
+    errChannel.send({
       message: "Can't add todo. ",
       context: todo,
     });
   }
 }
 
-BMB.ConfigureChannel(
-  MESSAGES.DATA_SOURCE_READY,
-  true,
-  true,
-  false
-);
-BMB.Broadcast(MESSAGES.DATA_SOURCE_READY, true);
+PubSubChannel.getOrCreate(MESSAGES.DATA_SOURCE_READY, {
+  enableBroadcast: true,
+  enableCaching: true,
+}).send(true);
