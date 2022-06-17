@@ -1,10 +1,16 @@
-import {
-  PubSubChannel,
-  ReqRepChannel,
-  Disposer,
-} from "browser-message-broker";
+import { Disposer } from "browser-message-broker";
 import { ReactiveController } from "lit";
-import { ITodo, MESSAGES } from "./Messages";
+import {
+  completeTodoChannel,
+  delTodoChannel,
+  dsReadyChannel,
+  getAllTodosChannel,
+  ITodo,
+  todoAddedChannel,
+  todoDeletedChannel,
+  todoModifiedChannel,
+  todoSelectedChannel,
+} from "./Channels";
 import type { TodoList } from "./todoList";
 
 export class TodoListController
@@ -19,32 +25,18 @@ export class TodoListController
     this.host = host;
     host.addController(this);
 
-    this.disposeTodoAdded =
-      PubSubChannel.getOrCreate<ITodo>(
-        MESSAGES.TODO_ADDED,
-        {
-          enableBroadcast: true,
-          enableCaching: false,
-        }
-      ).subscribe(this.onTodoAdded.bind(this));
+    this.disposeTodoAdded = todoAddedChannel.subscribe(
+      this.onTodoAdded.bind(this)
+    );
 
     this.disposeTodoModified =
-      PubSubChannel.getOrCreate<ITodo>(
-        MESSAGES.TODO_MODIFIED,
-        {
-          enableBroadcast: true,
-          enableCaching: false,
-        }
-      ).subscribe(this.onTodoModified.bind(this));
+      todoModifiedChannel.subscribe(
+        this.onTodoModified.bind(this)
+      );
 
-    this.disposeTodoDeleted =
-      PubSubChannel.getOrCreate<ITodo>(
-        MESSAGES.TODO_DELETED,
-        {
-          enableBroadcast: true,
-          enableCaching: false,
-        }
-      ).subscribe(this.onTodoDeleted.bind(this));
+    this.disposeTodoDeleted = todoDeletedChannel.subscribe(
+      this.onTodoDeleted.bind(this)
+    );
   }
 
   onTodoAdded(todo: ITodo) {
@@ -75,32 +67,23 @@ export class TodoListController
   }
 
   completeTodo(t: ITodo) {
-    PubSubChannel.broadcast(MESSAGES.COMPLETE_TODO, t);
+    completeTodoChannel.send(t);
   }
 
   deleteTodo(t: ITodo) {
-    PubSubChannel.broadcast(MESSAGES.DEL_TODO, t);
+    delTodoChannel.send(t);
   }
 
   selectTodo(t: ITodo) {
-    PubSubChannel.broadcast(MESSAGES.TODO_SELECTED, t);
+    todoSelectedChannel.send(t);
   }
 
   async hostConnected() {
-    const dsIsReady = PubSubChannel.GetState<boolean>(
-      MESSAGES.DATA_SOURCE_READY
-    );
-    if (!dsIsReady)
-      await PubSubChannel.nextMessage(
-        MESSAGES.DATA_SOURCE_READY
-      );
+    const dsIsReady = dsReadyChannel.getState();
 
-    const todos = await ReqRepChannel.getOrCreate<
-      undefined,
-      ITodo[]
-    >(MESSAGES.GET_ALL_TODOS, {
-      enableBroadcast: true,
-    }).request(undefined);
+    if (!dsIsReady) await dsReadyChannel.nextMessage();
+
+    const todos = await getAllTodosChannel.request();
 
     this.host.allTodos = todos || [];
   }

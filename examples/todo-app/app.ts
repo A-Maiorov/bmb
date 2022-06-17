@@ -1,7 +1,7 @@
 import { PubSubChannel } from "browser-message-broker";
 import { css, CSSResultGroup, html, LitElement } from "lit";
 import { customElement, query } from "lit/decorators.js";
-import { ITodo, ITodoErr, MESSAGES } from "./Messages";
+import { ITodo, ITodoErr, MESSAGES } from "./Channels";
 
 const errorChannel = PubSubChannel.getOrCreate<ITodoErr>(
   MESSAGES.TODO_ERR,

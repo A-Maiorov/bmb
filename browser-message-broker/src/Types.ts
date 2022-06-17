@@ -94,7 +94,7 @@ export interface IBroker {
   ): Promise<TRep> | Promise<undefined>;
   Reply<TReq = unknown, TRep = unknown>(
     channelName: string,
-    handler: (req: TReq) => TRep,
+    handler: (req: TReq) => TRep | Promise<TRep>,
     enableBroadcast?: boolean
   ): ReqSubscription;
 }

@@ -6,7 +6,7 @@ const reqRepChannels = new Map<string, ReqRepChannel>();
 export class ReqRepChannel<TReq = unknown, TRep = unknown>
   implements IReqRepChannel<TReq, TRep>
 {
-  async request(msg: TReq): Promise<TRep | undefined> {
+  async request(msg?: TReq): Promise<TRep | undefined> {
     return BMB.Request<TRep>(
       this.name,
       msg,
@@ -14,7 +14,7 @@ export class ReqRepChannel<TReq = unknown, TRep = unknown>
     );
   }
 
-  reply(handler: (req: TReq) => TRep) {
+  reply(handler: (req: TReq) => TRep | Promise<TRep>) {
     return BMB.Reply<TReq, TRep>(
       this.name,
       handler,

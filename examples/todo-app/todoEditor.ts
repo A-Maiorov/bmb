@@ -4,9 +4,14 @@ import {
   query,
   state,
 } from "lit/decorators.js";
-import { IModifyTodo, ITodo, MESSAGES } from "./Messages";
-import { PubSubChannel } from "browser-message-broker";
-import { Disposer } from "browser-message-broker/dist/Types";
+import {
+  ITodo,
+  modifyTodoChannel,
+  todoDeletedChannel,
+  todoModifiedChannel,
+  todoSelectedChannel,
+} from "./Channels";
+import { Disposer } from "browser-message-broker";
 
 @customElement("todo-editor")
 export class TodoEditor extends LitElement {
@@ -27,31 +32,18 @@ export class TodoEditor extends LitElement {
     super();
 
     this.disposeTodoSelected =
-      PubSubChannel.getOrCreate<ITodo>(
-        MESSAGES.TODO_SELECTED,
-        {
-          enableBroadcast: true,
-          enableCaching: true,
-        }
-      ).subscribe(this.onTodoSelected.bind(this));
+      todoSelectedChannel.subscribe(
+        this.onTodoSelected.bind(this)
+      );
 
     this.disposeTodoModified =
-      PubSubChannel.getOrCreate<ITodo>(
-        MESSAGES.TODO_MODIFIED,
-        {
-          enableBroadcast: true,
-          enableCaching: true,
-        }
-      ).subscribe(this.onTodoModified.bind(this));
+      todoModifiedChannel.subscribe(
+        this.onTodoModified.bind(this)
+      );
 
-    this.disposeTodoDeleted =
-      PubSubChannel.getOrCreate<ITodo>(
-        MESSAGES.TODO_DELETED,
-        {
-          enableBroadcast: true,
-          enableCaching: false,
-        }
-      ).subscribe(this.onTodoModified.bind(this));
+    this.disposeTodoDeleted = todoDeletedChannel.subscribe(
+      this.onTodoModified.bind(this)
+    );
   }
 
   onTodoModified(msg: ITodo) {
@@ -91,13 +83,10 @@ export class TodoEditor extends LitElement {
     const newText = this.txtInput?.value;
     if (!newText || newText === "") return;
 
-    PubSubChannel.broadcast<IModifyTodo>(
-      MESSAGES.MODIFY_TODO,
-      {
-        id: this.selectedTodo.id,
-        newText,
-      }
-    );
+    modifyTodoChannel.send({
+      id: this.selectedTodo.id,
+      newText,
+    });
   }
 
   static override styles = css`

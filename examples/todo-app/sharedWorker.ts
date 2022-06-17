@@ -1,40 +1,18 @@
 import { openDB } from "idb";
 import {
-  PubSubChannel,
-  ReqRepChannel,
-} from "browser-message-broker";
-import {
+  addTodoChannel,
+  completeTodoChannel,
+  delTodoChannel,
+  dsReadyChannel,
+  getAllTodosChannel,
   IModifyTodo,
   ITodo,
-  ITodoErr,
-  MESSAGES,
-} from "./Messages";
-
-const errChannel = PubSubChannel.getOrCreate<ITodoErr>(
-  MESSAGES.TODO_ERR,
-  {
-    enableBroadcast: true,
-    enableCaching: false,
-  }
-);
-
-const todoAddedChannel = PubSubChannel.getOrCreate<ITodo>(
-  MESSAGES.TODO_ADDED,
-  {
-    enableBroadcast: true,
-    enableCaching: false, //in order to avoid publishing this state to remote brokers on sync
-  }
-);
-
-const todoDeletedChannel = PubSubChannel.getOrCreate<ITodo>(
-  MESSAGES.TODO_DELETED,
-  { enableBroadcast: true, enableCaching: false }
-);
-const todoModifiedChannel =
-  PubSubChannel.getOrCreate<ITodo>(MESSAGES.TODO_MODIFIED, {
-    enableBroadcast: true,
-    enableCaching: false,
-  });
+  modifyTodoChannel,
+  todoAddedChannel,
+  todoDeletedChannel,
+  todoErrChannel,
+  todoModifiedChannel,
+} from "./Channels";
 
 const dbProm = openDB("Todos", 1, {
   upgrade(db) {
@@ -46,35 +24,15 @@ const dbProm = openDB("Todos", 1, {
   },
 });
 
-PubSubChannel.getOrCreate<Partial<ITodo>>(
-  MESSAGES.ADD_TODO,
-  { enableBroadcast: true, enableCaching: false }
-).subscribe(handleAddTodo);
+addTodoChannel.subscribe(handleAddTodo);
 
-PubSubChannel.getOrCreate<ITodo>(MESSAGES.COMPLETE_TODO, {
-  enableBroadcast: true,
-  enableCaching: false,
-}).subscribe(handleCompleteTodo);
+completeTodoChannel.subscribe(handleCompleteTodo);
 
-PubSubChannel.getOrCreate<ITodo>(MESSAGES.DEL_TODO, {
-  enableBroadcast: true,
-  enableCaching: false,
-}).subscribe(handleDeleteTodo);
+delTodoChannel.subscribe(handleDeleteTodo);
 
-PubSubChannel.getOrCreate<IModifyTodo>(
-  MESSAGES.MODIFY_TODO,
-  {
-    enableBroadcast: true,
-    enableCaching: false,
-  }
-).subscribe(handleModifyTodo);
+modifyTodoChannel.subscribe(handleModifyTodo);
 
-ReqRepChannel.getOrCreate<undefined>(
-  MESSAGES.GET_ALL_TODOS,
-  {
-    enableBroadcast: true,
-  }
-).reply(handleGetAllTodos);
+getAllTodosChannel.reply(handleGetAllTodos);
 
 async function handleGetAllTodos(_: undefined) {
   try {
@@ -83,12 +41,12 @@ async function handleGetAllTodos(_: undefined) {
     return todos;
   } catch (err) {
     console.log(err);
-    errChannel.send({
+    todoErrChannel.send({
       message: `Can't get all todos`,
       context: {},
     });
   }
-  return undefined;
+  return Promise.resolve([]);
 }
 
 async function handleModifyTodo(msg: IModifyTodo) {
@@ -99,7 +57,7 @@ async function handleModifyTodo(msg: IModifyTodo) {
     await db.put("todo", todo);
     todoModifiedChannel.send(todo);
   } catch {
-    errChannel.send({
+    todoErrChannel.send({
       message: `Can't modify todo. Change: text = '${msg.newText}'`,
       context: { id: msg.id },
     });
@@ -112,7 +70,7 @@ async function handleDeleteTodo(todo: ITodo) {
     await db.delete("todo", todo.id);
     todoDeletedChannel.send(todo);
   } catch {
-    errChannel.send({
+    todoErrChannel.send({
       message: "Can't delete todo",
       context: todo,
     });
@@ -126,7 +84,7 @@ async function handleCompleteTodo(todo: ITodo) {
     todo.isDone = true;
     todoModifiedChannel.send(todo);
   } catch {
-    errChannel.send({
+    todoErrChannel.send({
       message: "Can't complete todo",
       context: todo,
     });
@@ -135,7 +93,7 @@ async function handleCompleteTodo(todo: ITodo) {
 
 async function handleAddTodo(todo: Partial<ITodo>) {
   if (!todo.text || todo.text === "") {
-    errChannel.send({
+    todoErrChannel.send({
       context: todo,
       message: "Can't add todo without text",
     });
@@ -152,14 +110,11 @@ async function handleAddTodo(todo: Partial<ITodo>) {
     newTodo.id = key;
     todoAddedChannel.send(newTodo as ITodo);
   } catch (err) {
-    errChannel.send({
+    todoErrChannel.send({
       message: "Can't add todo. ",
       context: todo,
     });
   }
 }
 
-PubSubChannel.getOrCreate(MESSAGES.DATA_SOURCE_READY, {
-  enableBroadcast: true,
-  enableCaching: true,
-}).send(true);
+dsReadyChannel.send(true);
