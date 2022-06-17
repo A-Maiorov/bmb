@@ -388,7 +388,6 @@ class Broker implements IBroker {
       isCached: false,
       dispose: () => {
         subs.splice(subs.indexOf(hdl), 1);
-        subscription.isDisposed = true;
       },
       publish: (msg, targetId?: string) =>
         this.Publish(channelName, msg, targetId),
@@ -487,10 +486,12 @@ class Broker implements IBroker {
           targetId
         )) as unknown as (req: TReq) => TRep;
     }
-
+    const reqListeners = this.requestListeners;
     const subs: ReqSubscription = {
       channelName,
-      isDisposed: true,
+      get isDisposed() {
+        return reqListeners.has(channelName);
+      },
       isBroadcast: enableBroadcast,
       handler: handler as (r: unknown) => unknown,
       dispose: undefined as unknown as () => void,
@@ -570,3 +571,5 @@ globalThis.BrowserMessageBroker =
 
 export const BMB = globalThis.BrowserMessageBroker;
 export type { IBroker, Subscription } from "./Types";
+export * from "./PubSubChannel";
+export * from "./ReqRepChannel";

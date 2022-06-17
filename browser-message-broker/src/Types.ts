@@ -1,3 +1,26 @@
+export interface IChannel {
+  type: "pubSub" | "reqRep";
+  dispose: () => void;
+  name: string;
+  isBroadcast?: boolean;
+}
+
+export interface IPubSubChannel<TMsg> extends IChannel {
+  publish: (msg: TMsg, targetId?: string) => Promise<void>;
+  subscribe(handler: THandler<TMsg>): Subscription<TMsg>;
+  getState: () => TMsg | undefined;
+  nextMessage: () => Promise<TMsg>;
+  isCached: boolean;
+  type: "pubSub";
+}
+
+export interface IReqRepChannel<TReq = unknown, TRep = unknown>
+  extends IChannel {
+  request: (msg: TReq, targetId?: string) => Promise<TRep | undefined>;
+  reply: (handler: (req: TReq) => TRep) => ReqSubscription;
+  type: "reqRep";
+}
+
 export interface Subscription<T> {
   dispose: () => void;
   publish: (msg: T, targetId?: string) => Promise<void>;
