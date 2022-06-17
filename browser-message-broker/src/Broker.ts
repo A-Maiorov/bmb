@@ -557,6 +557,5 @@ globalThis.BrowserMessageBroker =
   globalThis.BrowserMessageBroker || new Broker();
 
 export const BMB = globalThis.BrowserMessageBroker;
-export type { IBroker, Subscription } from "./Types";
 export * from "./PubSubChannel";
 export * from "./ReqRepChannel";
