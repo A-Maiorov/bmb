@@ -85,19 +85,18 @@ class Broker implements IBroker {
 
   ConfigureChannel(
     channelName: string,
-    enableBroadcast: boolean,
-    enableCaching: boolean,
+    broadcast: boolean,
+    cache: boolean,
     trace: boolean
   ): void {
     channelSettings.set(channelName, {
-      enableBroadcast,
-      enableCaching,
+      broadcast: broadcast,
+      cache: cache,
       trace,
     });
 
-    if (enableCaching)
-      this.state.set(channelName, undefined);
-    if (enableBroadcast) this.braodcasts.add(channelName);
+    if (cache) this.state.set(channelName, undefined);
+    if (broadcast) this.braodcasts.add(channelName);
   }
 
   private handleBroadcastError(
@@ -309,8 +308,7 @@ class Broker implements IBroker {
       channelType,
     };
 
-    if (settings?.enableCaching)
-      this.state.set(channelName, msg);
+    if (settings?.cache) this.state.set(channelName, msg);
 
     this.__bcChannel.postMessage(envelope);
   }
@@ -369,14 +367,14 @@ class Broker implements IBroker {
   Subscribe<T>(
     channelName: string,
     handler?: THandler<T>,
-    enableBroadcast = false,
-    enableCaching = true
+    broadcast = false,
+    cache = true
   ): Subscription<T> {
     const settings = channelSettings.get(channelName);
     const settingsOverriden = false;
     if (settings) {
-      enableBroadcast = settings.enableBroadcast || false;
-      enableCaching = settings.enableCaching || true;
+      broadcast = settings.broadcast || false;
+      cache = settings.cache || true;
       settingsOverriden;
     }
 
@@ -402,10 +400,8 @@ class Broker implements IBroker {
       isDisposed: false,
     };
 
-    if (enableBroadcast)
-      this.__configureBroadcast(subscription);
-    if (enableCaching)
-      this.state.set(channelName, undefined);
+    if (broadcast) this.__configureBroadcast(subscription);
+    if (cache) this.state.set(channelName, undefined);
 
     return subscription;
   }
@@ -428,10 +424,10 @@ class Broker implements IBroker {
   Request<TRep = unknown>(
     channelName: string,
     requestData: unknown,
-    enableBroadcast = false,
+    broadcast = false,
     targetId?: string
   ): Promise<TRep> | Promise<undefined> {
-    if (!enableBroadcast) {
+    if (!broadcast) {
       const listener =
         this.requestListeners.get(channelName);
       if (!listener) return Promise.resolve(undefined);
@@ -471,9 +467,9 @@ class Broker implements IBroker {
   Reply<TReq = unknown, TRep = unknown>(
     channelName: string,
     handler: (req: TReq) => TRep,
-    enableBroadcast = false
+    broadcast = false
   ) {
-    if (enableBroadcast) {
+    if (broadcast) {
       const origHandler = handler;
       handler = ((msg: TReq, targetId: string) =>
         this._broadcast(
@@ -489,7 +485,7 @@ class Broker implements IBroker {
       get isDisposed() {
         return reqListeners.has(channelName);
       },
-      isBroadcast: enableBroadcast,
+      isBroadcast: broadcast,
       handler: handler as (r: unknown) => unknown,
       dispose: undefined as unknown as () => void,
     };
@@ -535,7 +531,7 @@ class Broker implements IBroker {
 
     await Promise.all(allSubscribersPromises);
 
-    if (this.state.has(channelName))
+    if (channelSettings.get(channelName)?.cache)
       this.state.set(channelName, msg);
 
     this.__handleAwaiter(channelName, msg);

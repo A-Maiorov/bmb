@@ -11,7 +11,7 @@ const pubSubChannels = new Map<string, PubSubChannel>();
 export class PubSubChannel<TMsg = any>
   implements IPubSubChannel<TMsg>
 {
-  static getOrCreate<TMsg>(
+  static for<TMsg>(
     name: string,
     settings?: ChannelSettings
   ): PubSubChannel<TMsg> {
@@ -23,8 +23,8 @@ export class PubSubChannel<TMsg = any>
 
     BMB.ConfigureChannel(
       name,
-      settings.enableBroadcast || false,
-      settings.enableCaching || false,
+      settings.broadcast || false,
+      settings.cache || false,
       settings.trace || false
     );
     const channel = new PubSubChannel<TMsg>(name, settings);
@@ -62,8 +62,8 @@ export class PubSubChannel<TMsg = any>
     const s = BMB.Subscribe(
       this.name,
       handler,
-      this.settings.enableBroadcast,
-      this.settings.enableCaching
+      this.settings.broadcast,
+      this.settings.cache
     );
     return s.dispose;
   }

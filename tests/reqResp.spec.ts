@@ -11,7 +11,7 @@ describe("Browser Message Broker subscriber", () => {
     const channelName = "reqRespTest";
 
     //Arrange listener before making request
-    const channel = ReqRepChannel.getOrCreate<TReq, TRep>(
+    const channel = ReqRepChannel.for<TReq, TRep>(
       channelName,
       {}
     );

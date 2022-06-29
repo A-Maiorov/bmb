@@ -38,10 +38,10 @@ function setup() {
   };
 
   //Configure channel to receive response message from worker via PUB-SUB channel
-  PubSubChannel.getOrCreate<testMsg>(
+  PubSubChannel.for<testMsg>(
     PUB_SUB_RESPONSE_SUBSCRIPTION_KEY,
     {
-      enableBroadcast: true,
+      broadcast: true,
     }
   ).subscribe((m) => {
     const el = document.getElementById("test");
@@ -80,11 +80,11 @@ export function test() {
         type TMsg = {
           payload: string;
         };
-        const response = await ReqRepChannel.getOrCreate<
+        const response = await ReqRepChannel.for<
           TMsg,
           TMsg
         >(REQ_REP_CHANNEL_NAME, {
-          enableBroadcast: true,
+          broadcast: true,
         }).request({
           payload: "request",
         });

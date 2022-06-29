@@ -32,74 +32,84 @@ export const MESSAGES = {
   DATA_SOURCE_READY: "dataSourceReady",
 };
 
-export const todoAddedChannel =
-  PubSubChannel.getOrCreate<ITodo>(MESSAGES.TODO_ADDED, {
-    enableBroadcast: true,
-    enableCaching: false,
-  });
+export const todoAddedChannel = PubSubChannel.for<ITodo>(
+  MESSAGES.TODO_ADDED,
+  {
+    broadcast: true,
+    cache: false,
+  }
+);
 
-export const todoErrChannel =
-  PubSubChannel.getOrCreate<ITodoErr>(MESSAGES.TODO_ERR, {
-    enableBroadcast: true,
-    enableCaching: false,
-  });
+export const todoErrChannel = PubSubChannel.for<ITodoErr>(
+  MESSAGES.TODO_ERR,
+  {
+    broadcast: true,
+    cache: false,
+  }
+);
 
-export const todoDeletedChannel =
-  PubSubChannel.getOrCreate<ITodo>(MESSAGES.TODO_DELETED, {
-    enableBroadcast: true,
-    enableCaching: false,
-  });
-export const todoModifiedChannel =
-  PubSubChannel.getOrCreate<ITodo>(MESSAGES.TODO_MODIFIED, {
-    enableBroadcast: true,
-    enableCaching: false,
-  });
-export const dsReadyChannel =
-  PubSubChannel.getOrCreate<boolean>(
-    MESSAGES.DATA_SOURCE_READY,
-    {
-      enableBroadcast: true,
-      enableCaching: true,
-    }
-  );
+export const todoDeletedChannel = PubSubChannel.for<ITodo>(
+  MESSAGES.TODO_DELETED,
+  {
+    broadcast: true,
+    cache: false,
+  }
+);
+export const todoModifiedChannel = PubSubChannel.for<ITodo>(
+  MESSAGES.TODO_MODIFIED,
+  {
+    broadcast: true,
+    cache: false,
+  }
+);
+export const dsReadyChannel = PubSubChannel.for<boolean>(
+  MESSAGES.DATA_SOURCE_READY,
+  {
+    broadcast: true,
+    cache: true,
+  }
+);
 
-export const addTodoChannel = PubSubChannel.getOrCreate<
+export const addTodoChannel = PubSubChannel.for<
   Partial<ITodo>
 >(MESSAGES.ADD_TODO, {
-  enableBroadcast: true,
-  enableCaching: false,
+  broadcast: true,
+  cache: false,
 });
 
-export const completeTodoChannel =
-  PubSubChannel.getOrCreate<ITodo>(MESSAGES.COMPLETE_TODO, {
-    enableBroadcast: true,
-    enableCaching: false,
-  });
+export const completeTodoChannel = PubSubChannel.for<ITodo>(
+  MESSAGES.COMPLETE_TODO,
+  {
+    broadcast: true,
+    cache: false,
+  }
+);
 
-export const delTodoChannel =
-  PubSubChannel.getOrCreate<ITodo>(MESSAGES.DEL_TODO, {
-    enableBroadcast: true,
-    enableCaching: false,
-  });
+export const delTodoChannel = PubSubChannel.for<ITodo>(
+  MESSAGES.DEL_TODO,
+  {
+    broadcast: true,
+    cache: false,
+  }
+);
 
 export const modifyTodoChannel =
-  PubSubChannel.getOrCreate<IModifyTodo>(
-    MESSAGES.MODIFY_TODO,
-    {
-      enableBroadcast: true,
-      enableCaching: false,
-    }
-  );
+  PubSubChannel.for<IModifyTodo>(MESSAGES.MODIFY_TODO, {
+    broadcast: true,
+    cache: false,
+  });
 
-export const getAllTodosChannel = ReqRepChannel.getOrCreate<
+export const getAllTodosChannel = ReqRepChannel.for<
   undefined,
   ITodo[]
 >(MESSAGES.GET_ALL_TODOS, {
-  enableBroadcast: true,
+  broadcast: true,
 });
 
-export const todoSelectedChannel =
-  PubSubChannel.getOrCreate<ITodo>(MESSAGES.TODO_SELECTED, {
-    enableBroadcast: true,
-    enableCaching: true,
-  });
+export const todoSelectedChannel = PubSubChannel.for<ITodo>(
+  MESSAGES.TODO_SELECTED,
+  {
+    broadcast: true,
+    cache: true,
+  }
+);

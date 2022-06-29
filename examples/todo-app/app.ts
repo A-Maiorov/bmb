@@ -3,9 +3,9 @@ import { css, CSSResultGroup, html, LitElement } from "lit";
 import { customElement, query } from "lit/decorators.js";
 import { ITodo, ITodoErr, MESSAGES } from "./Channels";
 
-const errorChannel = PubSubChannel.getOrCreate<ITodoErr>(
+const errorChannel = PubSubChannel.for<ITodoErr>(
   MESSAGES.TODO_ERR,
-  { enableBroadcast: true, enableCaching: false }
+  { broadcast: true, cache: false }
 );
 errorChannel.subscribe((err) => {
   console.log(err);

@@ -41,10 +41,10 @@ MyMessageProducer.ts
 ```ts
 import { PubSubChannel, ReqRepChannel } from "browser-message-broker";
 type MyMessage = { name: string; greeting: string }
-const MyMessageChannel = PubSubChannel.getOrCreate<MyMessage>(
+const MyMessageChannel = PubSubChannel.for<MyMessage>(
   "MyMessage", {
-    enableBroadcast: true,
-    enableCaching: false,
+    broadcast: true,
+    cache: false,
     trace: false
   }
 );
@@ -65,10 +65,10 @@ MyMessageConsumer.ts
 ```ts
 import { PubSubChannel, ReqRepChannel } from "browser-message-broker";
 type MyMessage = { name: string; greeting: string }
-const MyMessageChannel = PubSubChannel.getOrCreate<MyMessage>(
+const MyMessageChannel = PubSubChannel.for<MyMessage>(
   "MyMessage", {
-    enableBroadcast: true,
-    enableCaching: false,
+    broadcast: true,
+    cache: false,
     trace: false
   }
 );
@@ -87,9 +87,9 @@ type TReq = { reqPayload: string };
 type TRep = { respPayload: string };
 
 // Shared Worker (consumer)
-ReqRepChannel.getOrCreate<TReq, TRep>(
+ReqRepChannel.for<TReq, TRep>(
   "GetData", 
-  { enableBroadcast: true }
+  { broadcast: true }
 ).reply((req: TReq)=>{
   return  { respPayload: "Hello " + req.reqPayload   }
 });
@@ -98,9 +98,9 @@ ReqRepChannel.getOrCreate<TReq, TRep>(
 const req: TReq = { reqPayload: "Bob" };
 
 const reply: TResp = 
-await ReqRepChannel.getOrCreate<TReq, TRep>(
+await ReqRepChannel.for<TReq, TRep>(
  "GetData", 
- { enableBroadcast: true }
+ { broadcast: true }
 ).request(undefined);
 
 console.log(reply)// { "respPayload": "Hello Bob" }

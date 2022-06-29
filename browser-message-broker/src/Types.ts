@@ -6,8 +6,8 @@ export interface IChannel {
   settings: ChannelSettings;
 }
 export type ChannelSettings = {
-  enableBroadcast?: boolean;
-  enableCaching?: boolean;
+  broadcast?: boolean;
+  cache?: boolean;
   trace?: boolean;
 } & {};
 export interface IPubSubChannel<TMsg> extends IChannel {
@@ -66,15 +66,15 @@ export interface IBroker {
 
   ConfigureChannel(
     channelName: string,
-    enableBroadcast: boolean,
-    enableCaching: boolean,
+    broadcast: boolean,
+    cache: boolean,
     trace: boolean
   ): void;
   Subscribe<T>(
     channelName: string,
     handler?: THandler<T>,
-    enableBroadcast?: boolean,
-    enableCaching?: boolean
+    broadcast?: boolean,
+    cache?: boolean
   ): Subscription<T>;
   Publish<T = unknown>(
     subsKey: string,
@@ -90,12 +90,12 @@ export interface IBroker {
   Request<TRep = unknown>(
     channelName: string,
     requestData: unknown,
-    enableBroadcast?: boolean
+    broadcast?: boolean
   ): Promise<TRep> | Promise<undefined>;
   Reply<TReq = unknown, TRep = unknown>(
     channelName: string,
     handler: (req: TReq) => TRep | Promise<TRep>,
-    enableBroadcast?: boolean
+    broadcast?: boolean
   ): ReqSubscription;
 }
 

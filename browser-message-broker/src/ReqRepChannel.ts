@@ -10,7 +10,7 @@ export class ReqRepChannel<TReq = unknown, TRep = unknown>
     return BMB.Request<TRep>(
       this.name,
       msg,
-      this.settings.enableBroadcast
+      this.settings.broadcast
     );
   }
 
@@ -18,7 +18,7 @@ export class ReqRepChannel<TReq = unknown, TRep = unknown>
     return BMB.Reply<TReq, TRep>(
       this.name,
       handler,
-      this.settings.enableBroadcast
+      this.settings.broadcast
     ).dispose;
   }
 
@@ -33,7 +33,7 @@ export class ReqRepChannel<TReq = unknown, TRep = unknown>
 
   readonly name: string = "";
 
-  static getOrCreate<TReq = unknown, TRep = unknown>(
+  static for<TReq = unknown, TRep = unknown>(
     name: string,
     settings?: ChannelSettings
   ): ReqRepChannel<TReq, TRep> {
@@ -45,8 +45,8 @@ export class ReqRepChannel<TReq = unknown, TRep = unknown>
 
     BMB.ConfigureChannel(
       name,
-      settings.enableBroadcast || false,
-      settings.enableCaching || false,
+      settings.broadcast || false,
+      settings.cache || false,
       settings.trace || false
     );
     const channel = new ReqRepChannel<TReq, TRep>(

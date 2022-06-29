@@ -9,10 +9,10 @@ describe("Browser Message Broker subscriber", () => {
   let received = false;
   let receivedPayload = "";
 
-  const channel = PubSubChannel.getOrCreate<TestMsg>(
-    TestMsg.name,
-    {}
-  );
+  const channel = PubSubChannel.for<TestMsg>(TestMsg.name, {
+    broadcast: false,
+    cache: true,
+  });
 
   channel.subscribe((x) => {
     received = true;
