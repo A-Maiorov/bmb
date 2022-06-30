@@ -11,41 +11,15 @@ import {
   todoModifiedChannel,
   todoSelectedChannel,
 } from "./Channels";
-import { Disposer } from "browser-message-broker";
+import { subscribe } from "./subscribeDecorator";
 
 @customElement("todo-editor")
 export class TodoEditor extends LitElement {
-  disposeTodoSelected: Disposer;
-  disposeTodoModified: Disposer;
-  disposeTodoDeleted: Disposer;
   @state()
   selectedTodo: ITodo | undefined = undefined;
 
-  override disconnectedCallback(): void {
-    this.disposeTodoSelected();
-    this.disposeTodoModified();
-    this.disposeTodoDeleted();
-    super.disconnectedCallback();
-  }
-
-  constructor() {
-    super();
-
-    this.disposeTodoSelected =
-      todoSelectedChannel.subscribe(
-        this.onTodoSelected.bind(this)
-      );
-
-    this.disposeTodoModified =
-      todoModifiedChannel.subscribe(
-        this.onTodoModified.bind(this)
-      );
-
-    this.disposeTodoDeleted = todoDeletedChannel.subscribe(
-      this.onTodoModified.bind(this)
-    );
-  }
-
+  @subscribe(todoModifiedChannel)
+  @subscribe(todoDeletedChannel)
   onTodoModified(msg: ITodo) {
     if (
       this.selectedTodo &&
@@ -54,6 +28,7 @@ export class TodoEditor extends LitElement {
       this.selectedTodo = undefined;
   }
 
+  @subscribe(todoSelectedChannel)
   onTodoSelected(msg: ITodo) {
     this.selectedTodo = msg;
   }
