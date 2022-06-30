@@ -11,7 +11,7 @@ import {
   todoModifiedChannel,
   todoSelectedChannel,
 } from "./Channels";
-import { subscribe } from "./subscribeDecorator";
+import { subscribe } from "browser-message-broker/dist/subscribeDecorator.js";
 
 @customElement("todo-editor")
 export class TodoEditor extends LitElement {

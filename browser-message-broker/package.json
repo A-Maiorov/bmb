@@ -1,6 +1,6 @@
 {
     "name": "browser-message-broker",
-    "version": "0.0.6",
+    "version": "0.0.7",
     "description": "Simple message broker",
     "main": "dist/Module.js",
     "type": "module",
