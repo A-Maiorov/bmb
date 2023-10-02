@@ -16,7 +16,7 @@ jobs:
 
     steps:
     - name: Install dependencies for Playwright Webkit
-      run: npx playwright install-deps 
+      run: npx playwright install-with-deps
     - uses: actions/checkout@v3    
     - run: npm i
       working-directory: browser-message-broker
