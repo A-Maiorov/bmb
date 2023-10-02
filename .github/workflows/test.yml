@@ -15,6 +15,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/setup-node@v3
+        with:
+          node-version: 18
       - run: npm i
         working-directory: browser-message-broker
       - run: npm run build --if-present
@@ -24,10 +27,7 @@ jobs:
       - run: npm i
         working-directory: tests
       - name: Install dependencies for Playwright Webkit
-        run: npx playwright install-deps
-        working-directory: tests
-      - name: Install browsers
-        run: npx playwright install
+        run: npx playwright install --with-deps
         working-directory: tests
       - run: npm link browser-message-broker
         working-directory: tests
