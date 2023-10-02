@@ -27,7 +27,7 @@ describe("Browser Message Broker subscriber", () => {
     expect(received).to.be.true;
   });
 
-  it("should receive correct payolad", async () => {
+  it("should receive correct payload", async () => {
     expect(receivedPayload).to.equal("testmsg");
   });
 
@@ -41,9 +41,7 @@ describe("Browser Message Broker subscriber", () => {
       PubSubChannel.publish("testmsg", new TestMsg());
     }, 100);
 
-    const msg = await PubSubChannel.nextMessage<TestMsg>(
-      "testmsg"
-    );
+    const msg = await PubSubChannel.nextMessage<TestMsg>("testmsg");
 
     expect(msg).to.be.not.null;
     expect(msg.payload).to.equal("testmsg");
