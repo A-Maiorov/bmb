@@ -14,10 +14,6 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Install dependencies for Playwright Webkit
-        run: npx playwright install-deps
-      - name: Install browsers
-        run: npx playwright install
       - uses: actions/checkout@v3
       - run: npm i
         working-directory: browser-message-broker
@@ -26,6 +22,12 @@ jobs:
       - run: npm link
         working-directory: browser-message-broker
       - run: npm i
+        working-directory: tests
+      - name: Install dependencies for Playwright Webkit
+        run: npx playwright install-deps
+        working-directory: tests
+      - name: Install browsers
+        run: npx playwright install
         working-directory: tests
       - run: npm link browser-message-broker
         working-directory: tests
