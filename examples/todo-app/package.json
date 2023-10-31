@@ -1,27 +1,27 @@
 {
-    "name": "todo-app",
-    "version": "0.0.1",
-    "description": "BMB example",
-    "main": "index.js",
-    "type": "module",
-    "scripts": {
-        "build": "node build.js",
-        "test": "wtr",
-        "test:w": "wtr --watch",
-        "start": "npm run build && ws --compress"
-    },
-    "author": "",
-    "license": "MIT",
-    "private": true,
-    "dependencies": {
-        "browser-message-broker": "latest",
-        "idb": "7.1.1",
-        "lit": "2.8.0"
-    },
-    "devDependencies": {
-        "esbuild": "0.19.4",
-        "eslint": "8.50.0",
-        "local-web-server": "5.3.0",
-        "typescript": "5.2.2"
-    }
+  "name": "todo-app",
+  "version": "0.0.1",
+  "description": "BMB example",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "build": "node build.js",
+    "test": "wtr",
+    "test:w": "wtr --watch",
+    "start": "npm run build && ws --compress"
+  },
+  "author": "",
+  "license": "MIT",
+  "private": true,
+  "dependencies": {
+    "browser-message-broker": "latest",
+    "idb": "7.1.1",
+    "lit": "3.0.1"
+  },
+  "devDependencies": {
+    "esbuild": "0.19.5",
+    "eslint": "8.52.0",
+    "local-web-server": "5.3.0",
+    "typescript": "5.2.2"
+  }
 }

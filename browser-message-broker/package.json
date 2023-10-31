@@ -1,22 +1,22 @@
 {
-    "name": "browser-message-broker",
-    "version": "0.0.9",
-    "description": "Simple message broker",
-    "main": "dist/Module.js",
-    "type": "module",
-    "scripts": {
-        "build": "tsc && node build.js"
-    },
-    "author": "A-Maiorov",
-    "license": "MIT",
-    "private": false,
-    "repository": {
-        "type": "git",
-        "url": "https://github.com/A-Maiorov/bmb"
-    },
-    "devDependencies": {
-        "esbuild": "0.19.4",
-        "eslint": "8.50.0",
-        "typescript": "5.2.2"
-    }
+  "name": "browser-message-broker",
+  "version": "0.0.9",
+  "description": "Simple message broker",
+  "main": "dist/Module.js",
+  "type": "module",
+  "scripts": {
+    "build": "tsc && node build.js"
+  },
+  "author": "A-Maiorov",
+  "license": "MIT",
+  "private": false,
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/A-Maiorov/bmb"
+  },
+  "devDependencies": {
+    "esbuild": "0.19.5",
+    "eslint": "8.52.0",
+    "typescript": "5.2.2"
+  }
 }
