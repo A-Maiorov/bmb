@@ -18,18 +18,19 @@ jobs:
       - uses: actions/setup-node@v3
         with:
           node-version: 20
-      - run: npm i
+      - run: npm install -g pnpm
+      - run: pnpm i
         working-directory: browser-message-broker
-      - run: npm run build --if-present
+      - run: pnpm run build --if-present
         working-directory: browser-message-broker
-      - run: npm link
+      - run: pnpm link
         working-directory: browser-message-broker
-      - run: npm i
+      - run: pnpm i
         working-directory: tests
       - name: Install dependencies for Playwright Webkit
         run: npx playwright install --with-deps
         working-directory: tests
-      - run: npm link browser-message-broker
+      - run: pnpm link browser-message-broker
         working-directory: tests
       - run: npm run build --if-present
         working-directory: tests
