@@ -28,7 +28,7 @@ jobs:
       - run: pnpm i
         working-directory: tests
       - name: Install dependencies for Playwright Webkit
-        run: npx playwright install --with-deps
+        run: pnpm exec playwright install --with-deps
         working-directory: tests
       - run: pnpm link --global browser-message-broker
         working-directory: tests
