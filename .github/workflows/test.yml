@@ -23,16 +23,16 @@ jobs:
         working-directory: browser-message-broker
       - run: pnpm run build --if-present
         working-directory: browser-message-broker
-      - run: pnpm link --global
+      - run: npm link
         working-directory: browser-message-broker
-      - run: pnpm i
+      - run: npm ci
         working-directory: tests
-      - name: Install dependencies for Playwright Webkit
-        run: pnpm exec playwright install --with-deps
+      - name: Install dependencies for Playwright
+        run: npx playwright install --with-deps
         working-directory: tests
-      - run: pnpm link --global browser-message-broker
+      - run: npm link browser-message-broker
         working-directory: tests
-      - run: pnpm build --if-present
+      - run: npm build --if-present
         working-directory: tests
-      - run: pnpm test
+      - run: npm test
         working-directory: tests
