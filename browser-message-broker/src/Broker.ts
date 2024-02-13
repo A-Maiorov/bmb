@@ -47,11 +47,14 @@ class Broker implements IBroker {
   private __bcChannel = new BroadcastChannel(BROWSER_MESSAGE_BROKER);
 
   private log(message: string, channel: string, ...data: unknown[]) {
-    if (this.trace || channelSettings.get(channel)?.trace)
-      console.trace(
-        `[${globalThis.constructor.name}(${this.senderId})-${channel}] ${message}`,
-        data
+    if (this.trace || channelSettings.get(channel)?.trace) {
+      console.groupCollapsed(
+        `[${globalThis.constructor.name}(${this.senderId})-${channel}] ${message}`
       );
+      console.log(data);
+      console.trace();
+      console.groupEnd();
+    }
   }
 
   constructor() {

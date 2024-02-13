@@ -32,7 +32,7 @@ jobs:
         working-directory: tests
       - run: npm link browser-message-broker
         working-directory: tests
-      - run: npm build --if-present
+      - run: npm run build --if-present
         working-directory: tests
-      - run: npm test
+      - run: npm run test
         working-directory: tests
