@@ -12,7 +12,8 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-
+    container:
+      image: mcr.microsoft.com/playwright:v1.41.2-jammy
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -23,16 +24,13 @@ jobs:
         working-directory: browser-message-broker
       - run: pnpm run build --if-present
         working-directory: browser-message-broker
-      - run: npm link
+      - run: pnpm link --global
         working-directory: browser-message-broker
-      - run: npm i
+      - run: pnpm i
         working-directory: tests
-      - name: Install dependencies for Playwright
-        run: npx playwright install --with-deps
+      - run: pnpm link --global browser-message-broker
         working-directory: tests
-      - run: npm link browser-message-broker
+      - run: pnpm build --if-present
         working-directory: tests
-      - run: npm run build --if-present
-        working-directory: tests
-      - run: npm run test
+      - run: pnpm test
         working-directory: tests
