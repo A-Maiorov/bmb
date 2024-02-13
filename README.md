@@ -14,7 +14,7 @@ BMB is a tiny message broker (only about 2 kb compressed) that supports Publish/
 
 - Publish/Subscribe
 - Request/Reply
-- Messages caching and automatic synchronisation of the contexts
+- Messages caching and automatic synchronization of the contexts
 
 ## Examples
 
