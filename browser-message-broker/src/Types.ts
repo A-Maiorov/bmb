@@ -18,14 +18,9 @@ export interface IPubSubChannel<TMsg> extends IChannel {
   type: "pubSub";
 }
 
-export interface IReqRepChannel<
-  TReq = unknown,
-  TRep = unknown
-> extends IChannel {
-  request: (
-    msg: TReq,
-    targetId?: string
-  ) => Promise<TRep | undefined>;
+export interface IReqRepChannel<TReq = unknown, TRep = unknown>
+  extends IChannel {
+  request: (msg: TReq, targetId?: string) => Promise<TRep | undefined>;
   reply: (handler: (req: TReq) => TRep) => Disposer;
   type: "reqRep";
 }
@@ -38,10 +33,7 @@ export interface Subscription<T> {
   isDisposed?: boolean;
   isBroadcast?: boolean;
 }
-export interface ReqSubscription<
-  TReq = unknown,
-  TRep = unknown
-> {
+export interface ReqSubscription<TReq = unknown, TRep = unknown> {
   channelName: string;
   isDisposed: boolean;
   isBroadcast?: boolean;
@@ -59,10 +51,8 @@ export interface IBroker {
   requestListeners: Map<string, ReqSubscription>;
 
   trace: boolean;
-  braodcasts: Set<string>;
-  GetState<IStateItem>(
-    channelName: string
-  ): IStateItem | undefined;
+  broadcasts: Set<string>;
+  GetState<IStateItem>(channelName: string): IStateItem | undefined;
 
   ConfigureChannel(
     channelName: string,
