@@ -19,6 +19,9 @@ devDependencies:
   '@open-wc/testing':
     specifier: 4.0.0
     version: 4.0.0
+  '@playwright/test':
+    specifier: 1.39.0
+    version: 1.39.0
   '@types/mocha':
     specifier: 10.0.6
     version: 10.0.6
@@ -653,6 +656,14 @@ packages:
       - bufferutil
       - supports-color
       - utf-8-validate
+    dev: true
+
+  /@playwright/test@1.39.0:
+    resolution: {integrity: sha512-3u1iFqgzl7zr004bGPYiN/5EZpRUSFddQBra8Rqll5N0/vfpqlP9I9EXqAoGacuAbX6c9Ulg/Cjqglp5VkK6UQ==}
+    engines: {node: '>=16'}
+    hasBin: true
+    dependencies:
+      playwright: 1.39.0
     dev: true
 
   /@puppeteer/browsers@1.4.6(typescript@5.3.3):

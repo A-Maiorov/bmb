@@ -12,11 +12,10 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    container:
-      image: mcr.microsoft.com/playwright:v1.39.0-jammy
+
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v3
         with:
           node-version: 20
       - run: npm install -g pnpm
@@ -27,6 +26,9 @@ jobs:
       - run: pnpm link --global
         working-directory: browser-message-broker
       - run: pnpm i
+        working-directory: tests
+      - name: Install dependencies for Playwright
+        run: pnpm dlx playwright install --with-deps
         working-directory: tests
       - run: pnpm link --global browser-message-broker
         working-directory: tests

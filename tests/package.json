@@ -16,6 +16,7 @@
     "browser-message-broker": "latest"
   },
   "devDependencies": {
+    "@playwright/test": "1.39.0",
     "@esm-bundle/chai": "4.3.4-fix.0",
     "@open-wc/testing": "4.0.0",
     "@types/mocha": "10.0.6",
