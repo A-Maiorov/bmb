@@ -25,7 +25,7 @@ jobs:
         working-directory: browser-message-broker
       - run: npm link
         working-directory: browser-message-broker
-      - run: npm ci
+      - run: npm i
         working-directory: tests
       - name: Install dependencies for Playwright
         run: npx playwright install --with-deps
