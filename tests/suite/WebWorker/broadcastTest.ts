@@ -1,9 +1,6 @@
 import { runTests } from "@web/test-runner-mocha";
 import { expect } from "@open-wc/testing";
-import {
-  ReqRepChannel,
-  PubSubChannel,
-} from "browser-message-broker";
+import { ReqRepChannel, PubSubChannel } from "browser-message-broker";
 import {
   PUB_SUB_REQUEST_SUBSCRIPTION_KEY,
   PUB_SUB_RESPONSE_SUBSCRIPTION_KEY,
@@ -11,9 +8,7 @@ import {
 } from "./constants";
 
 //this url is relative to browser
-var testWorker = new Worker(
-  "suite/WebWorker/testWorker.js"
-);
+var testWorker = new Worker("suite/WebWorker/testWorker.js");
 
 interface testMsg {
   payload: string;
@@ -38,12 +33,9 @@ function setup() {
   };
 
   //Configure channel to receive response message from worker via PUB-SUB channel
-  PubSubChannel.for<testMsg>(
-    PUB_SUB_RESPONSE_SUBSCRIPTION_KEY,
-    {
-      broadcast: true,
-    }
-  ).subscribe((m) => {
+  PubSubChannel.for<testMsg>(PUB_SUB_RESPONSE_SUBSCRIPTION_KEY, {
+    broadcast: true,
+  }).subscribe((m) => {
     const el = document.getElementById("test");
     if (el) {
       el.innerHTML = m.payload;
@@ -61,12 +53,9 @@ export function test() {
         await workerIsReady;
 
         // Broadcast message to worker using short syntax (automatically created channel)
-        PubSubChannel.broadcast(
-          PUB_SUB_REQUEST_SUBSCRIPTION_KEY,
-          {
-            payload: "request",
-          }
-        );
+        PubSubChannel.broadcast(PUB_SUB_REQUEST_SUBSCRIPTION_KEY, {
+          payload: "request",
+        });
 
         await responseReceived;
 
@@ -80,19 +69,17 @@ export function test() {
         type TMsg = {
           payload: string;
         };
-        const response = await ReqRepChannel.for<
-          TMsg,
-          TMsg
-        >(REQ_REP_CHANNEL_NAME, {
-          broadcast: true,
-        }).request({
+        const response = await ReqRepChannel.for<TMsg, TMsg>(
+          REQ_REP_CHANNEL_NAME,
+          {
+            broadcast: true,
+          }
+        ).request({
           payload: "request",
         });
 
         expect(response).to.be.not.undefined;
-        expect(response?.payload).to.equal(
-          "requestresponse"
-        );
+        expect(response?.payload).to.equal("requestresponse");
       });
     });
   });

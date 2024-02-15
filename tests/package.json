@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "node buildWorker.cjs",
-    "test": "npm run build && wtr",
+    "test": "pnpm link --global browser-message-broker && npm run build && wtr",
     "test:w": "wtr --watch"
   },
   "license": "MIT",

@@ -51,6 +51,8 @@ export interface IBroker {
   requestListeners: Map<string, ReqSubscription>;
 
   trace: boolean;
+  traceBroadcasts: boolean;
+  traceMessages: boolean;
   broadcasts: Set<string>;
   GetState<IStateItem>(channelName: string): IStateItem | undefined;
 

@@ -88,7 +88,8 @@ class Broker implements IBroker {
       trace,
     });
 
-    if (cache) this.state.set(channelName, undefined);
+    if (cache && !this.state.has(channelName))
+      this.state.set(channelName, undefined);
     if (broadcast) this.broadcasts.add(channelName);
   }
 
@@ -331,7 +332,11 @@ class Broker implements IBroker {
     };
 
     if (broadcast) this.__configureBroadcast(subscription);
-    if (cache) this.state.set(channelName, undefined);
+    if (cache) {
+      if (!this.state.has(channelName)) this.state.set(channelName, undefined);
+      const state = this.state.get(channelName);
+      if (state) hdl(state);
+    }
 
     return subscription;
   }
@@ -464,8 +469,7 @@ class Broker implements IBroker {
   }
 }
 
-globalThis.BrowserMessageBroker =
-  globalThis.BrowserMessageBroker || new Broker();
+globalThis.BrowserMessageBroker ??= new Broker();
 
 export const BMB = globalThis.BrowserMessageBroker;
 export * from "./PubSubChannel";
