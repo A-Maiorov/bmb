@@ -337,6 +337,8 @@ class Broker implements IBroker {
       const state = this.state.get(channelName);
       if (state) hdl(state);
     }
+    if (this.activeNotifications.has(channelName))
+      this.nextMessage(channelName).then((x) => hdl(x));
 
     return subscription;
   }
@@ -431,11 +433,14 @@ class Broker implements IBroker {
 
   requestListeners = new Map<string, ReqSubscription>();
 
+  private activeNotifications = new Set<string>();
+
   private async __notifySubscribers(
     channelName: string,
     msg: unknown,
     sId: string
   ) {
+    this.activeNotifications.add(channelName);
     const handlers = this.subscribers.get(channelName) || [];
 
     const allSubscribersPromises: Promise<void>[] = [];
@@ -451,6 +456,7 @@ class Broker implements IBroker {
       this.state.set(channelName, msg);
 
     this.__handleAwaiter(channelName, msg);
+    this.activeNotifications.delete(channelName);
 
     this.log("Message handled", channelName, {
       message: msg,
