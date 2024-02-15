@@ -40,6 +40,8 @@ const channelSettings = new Map<string, ChannelSettings>();
 
 class Broker implements IBroker {
   trace: boolean = false;
+  traceBroadcasts: boolean = false;
+  traceMessages: boolean = false;
   senderId = senderId;
   state = new Map<string, any>();
   subscribers = new Map<string, THandler[]>();
@@ -47,7 +49,13 @@ class Broker implements IBroker {
   private __bcChannel = new BroadcastChannel(BROWSER_MESSAGE_BROKER);
 
   private log(message: string, channel: string, ...data: unknown[]) {
-    if (this.trace || channelSettings.get(channel)?.trace) {
+    const c = channelSettings.get(channel);
+    if (
+      this.trace ||
+      c?.trace ||
+      (c?.broadcast && this.traceBroadcasts) ||
+      (!c?.broadcast && this.traceMessages)
+    ) {
       console.groupCollapsed(
         `[${globalThis.constructor.name}(${this.senderId})-${channel}] ${message}`
       );
@@ -231,7 +239,7 @@ class Broker implements IBroker {
     this.log(
       `Message broadcasted (${channelType}) to ${targetId || "all brokers"}`,
       channelName,
-      msg
+      { message: msg }
     );
 
     const _msg = await Promise.resolve(msg);
@@ -250,7 +258,7 @@ class Broker implements IBroker {
   }
 
   async Publish(channelName: string, msg: unknown, targetId?: string) {
-    this.log(`Message published`, channelName, msg);
+    this.log(`Message published`, channelName, { message: msg });
     await this.__notifySubscribers(channelName, msg, senderId);
 
     if (!this.broadcasts.has(channelName)) return;
@@ -439,7 +447,7 @@ class Broker implements IBroker {
 
     this.__handleAwaiter(channelName, msg);
 
-    this.log("Message handled", channelName, msg, this);
+    this.log("Message handled", channelName, { message: msg, broker: this });
   }
 
   private __handleAwaiter(subsKey: string, msg: unknown) {
