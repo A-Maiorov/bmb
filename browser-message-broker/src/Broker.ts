@@ -48,7 +48,7 @@ class Broker implements IBroker {
   broadcasts = new Set<string>();
   private __bcChannel = new BroadcastChannel(BROWSER_MESSAGE_BROKER);
 
-  private log(message: string, channel: string, ...data: unknown[]) {
+  private log(message: string, channel: string, data?: unknown) {
     const c = channelSettings.get(channel);
     if (
       this.trace ||
@@ -437,7 +437,7 @@ class Broker implements IBroker {
     for (const h of handlers) {
       if (!h) continue;
       allSubscribersPromises.push(Promise.resolve(h(msg, sId)));
-      this.log("Handler called", channelName, h);
+      this.log("Handler called", channelName, { handler: h, message: msg });
     }
 
     await Promise.all(allSubscribersPromises);
@@ -447,7 +447,11 @@ class Broker implements IBroker {
 
     this.__handleAwaiter(channelName, msg);
 
-    this.log("Message handled", channelName, { message: msg, broker: this });
+    this.log("Message handled", channelName, {
+      message: msg,
+      handlers,
+      broker: this,
+    });
   }
 
   private __handleAwaiter(subsKey: string, msg: unknown) {
