@@ -105,6 +105,7 @@ export interface IBrokerState {
   id: string;
   broadcasts: string[];
   availableState: { [x: string]: any };
+  reqAwaiters: { channelName: string; requestData: unknown }[];
 }
 
 export interface IBroadcastSyncEnvelope

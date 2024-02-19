@@ -121,6 +121,10 @@ class Broker implements IBroker {
       id: senderId,
       availableState,
       broadcasts: currentBroadcasts,
+      reqAwaiters: Array.from(this.broadcastedRequests.entries()).map((x) => ({
+        channelName: x[0],
+        requestData: x[1].requestData,
+      })),
     };
 
     const ev: IBroadcastSyncEnvelope = {
@@ -157,9 +161,17 @@ class Broker implements IBroker {
         ) {
           this.__notifySubscribers(s[0], s[1], ev.senderId);
         }
-
-        this.log("Broadcast sync response handled", "", ev.msg);
       }
+      for (const s of ev.msg.reqAwaiters) {
+        if (
+          this.requestListeners.has(s.channelName) &&
+          this.broadcasts.has(s.channelName)
+        ) {
+          const reqListener = this.requestListeners.get(s.channelName);
+          reqListener?.handler(s.requestData, ev.senderId);
+        }
+      }
+      this.log("Broadcast sync response received", "", ev.msg);
     }
   }
 
@@ -377,6 +389,7 @@ class Broker implements IBroker {
       const breq = {
         promise,
         resolve,
+        requestData,
       };
       this.broadcastedRequests.set(channelName, breq);
       return breq.promise;
@@ -387,6 +400,7 @@ class Broker implements IBroker {
     {
       promise: Promise<unknown>;
       resolve: (r: unknown) => void;
+      requestData: unknown;
     }
   >();
 
