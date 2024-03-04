@@ -157,7 +157,8 @@ class Broker implements IBroker {
         if (
           this.broadcasts.has(s[0]) &&
           this.state.has(s[0]) &&
-          this.state.get(s[0]) == undefined
+          this.state.get(s[0]) == undefined &&
+          !this.__nextMessageAwaiters.has(s[0])
         ) {
           this.__notifySubscribers(s[0], s[1], ev.senderId);
         }
