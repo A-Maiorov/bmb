@@ -1,11 +1,10 @@
-import { runTests } from "@web/test-runner-mocha";
-import { expect } from "@open-wc/testing";
 import { ReqRepChannel, PubSubChannel } from "browser-message-broker";
 import {
   PUB_SUB_REQUEST_SUBSCRIPTION_KEY,
   PUB_SUB_RESPONSE_SUBSCRIPTION_KEY,
   REQ_REP_CHANNEL_NAME,
 } from "./constants";
+import { test, expect } from "@playwright/test";
 
 //this url is relative to browser
 var testWorker = new Worker("suite/WebWorker/testWorker.js");
@@ -44,43 +43,43 @@ function setup() {
   });
 }
 
-export function test() {
-  runTests(async () => {
-    setup();
+export function runTests() {
+  //runTests(async () => {
+  setup();
 
-    describe("Broadcast messages to/from WebWorker", () => {
-      it("Should eventually receive and display response from WebWorker via pub-sub channel", async () => {
-        await workerIsReady;
+  test.describe("Broadcast messages to/from WebWorker", () => {
+    test("Should eventually receive and display response from WebWorker via pub-sub channel", async () => {
+      await workerIsReady;
 
-        // Broadcast message to worker using short syntax (automatically created channel)
-        PubSubChannel.broadcast(PUB_SUB_REQUEST_SUBSCRIPTION_KEY, {
-          payload: "request",
-        });
-
-        await responseReceived;
-
-        const el = document.getElementById("test");
-        expect(el).lightDom.to.equal("response");
+      // Broadcast message to worker using short syntax (automatically created channel)
+      PubSubChannel.broadcast(PUB_SUB_REQUEST_SUBSCRIPTION_KEY, {
+        payload: "request",
       });
 
-      it("Should eventually receive and display response from WebWorker via request-reply channel", async () => {
-        await workerIsReady;
+      await responseReceived;
 
-        type TMsg = {
-          payload: string;
-        };
-        const response = await ReqRepChannel.for<TMsg, TMsg>(
-          REQ_REP_CHANNEL_NAME,
-          {
-            broadcast: true,
-          }
-        ).request({
-          payload: "request",
-        });
+      const el = document.getElementById("test");
+      expect(el).to("response");
+    });
 
-        expect(response).to.be.not.undefined;
-        expect(response?.payload).to.equal("requestresponse");
+    test("Should eventually receive and display response from WebWorker via request-reply channel", async () => {
+      await workerIsReady;
+
+      type TMsg = {
+        payload: string;
+      };
+      const response = await ReqRepChannel.for<TMsg, TMsg>(
+        REQ_REP_CHANNEL_NAME,
+        {
+          broadcast: true,
+        }
+      ).request({
+        payload: "request",
       });
+
+      expect(response).toBeTruthy();
+      expect(response?.payload).toEqual("requestresponse");
     });
   });
+  // });
 }
