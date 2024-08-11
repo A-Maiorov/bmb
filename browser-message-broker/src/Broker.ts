@@ -223,7 +223,6 @@ class Broker implements IBroker {
     const originalDispose = subscription.dispose;
     subscription.dispose = () => {
       originalDispose();
-      this.broadcasts.delete(subscription.channelName);
     };
     subscription.isBroadcast = true;
 
