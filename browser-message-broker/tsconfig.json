@@ -1,6 +1,8 @@
 {
   "include": ["src"],
+  "exclude": ["node_modules"],
   "compilerOptions": {
+    "skipLibCheck": true,
     /* Visit https://aka.ms/tsconfig.json to read more about this file */
     /* Projects */
     // "incremental": true,                              /* Enable incremental compilation */

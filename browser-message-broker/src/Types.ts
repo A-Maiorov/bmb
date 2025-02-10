@@ -93,7 +93,7 @@ export interface IBroker {
   ): ReqSubscription;
 }
 
-export type ChannelType = "pubSub" | "req" | "rep" | "sync";
+export type ChannelType = "pubSub" | "req" | "rep"; // | "sync";
 export interface IBroadcastEnvelope<T = any> {
   senderId: string;
   targetId?: string;
@@ -103,18 +103,19 @@ export interface IBroadcastEnvelope<T = any> {
   channelType: ChannelType;
 }
 
-export interface IBrokerState {
-  id: string;
-  broadcasts: string[];
-  availableState: { [x: string]: any };
-  reqAwaiters: { channelName: string; requestData: unknown }[];
-}
+// export interface IBrokerState {
+//   id: string;
+//   broadcasts: string[];
+//   availableState: { [x: string]: any };
+//   reqAwaiters: { channelName: string; requestData: unknown }[];
+// }
 
-export interface IBroadcastSyncEnvelope
-  extends IBroadcastEnvelope<IBrokerState> {
-  channelName: "broadcast-sync";
-  msg: IBrokerState;
-}
+// export interface IBroadcastSyncEnvelope
+//   extends IBroadcastEnvelope<IBrokerState> {
+//   channelName: "broadcast-sync";
+//   msg: IBrokerState;
+// }
+
 declare global {
   var BrowserMessageBroker: IBroker;
 }

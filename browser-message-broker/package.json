@@ -5,7 +5,7 @@
   "main": "dist/Module.js",
   "type": "module",
   "scripts": {
-    "build": "tsc && node build.js"
+    "build": "tsc --project tsconfig.json & bun build.ts"
   },
   "author": "A-Maiorov",
   "license": "MIT",
@@ -15,8 +15,9 @@
     "url": "https://github.com/A-Maiorov/bmb"
   },
   "devDependencies": {
-    "esbuild": "0.20.0",
-    "eslint": "8.56.0",
-    "typescript": "5.3.3"
+    "esbuild": "0.24.2",
+    "eslint": "9.19.0",
+    "typescript": "5.7.3",
+    "@types/bun": "1.2.2"
   }
 }

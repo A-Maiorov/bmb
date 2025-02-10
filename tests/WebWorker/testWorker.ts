@@ -1,20 +1,16 @@
+import { PubSubChannel, ReqRepChannel } from "browser-message-broker";
 import {
-  PubSubChannel,
-  ReqRepChannel,
-} from "browser-message-broker";
-import {
-  PUB_SUB_REQUEST_SUBSCRIPTION_KEY,
-  PUB_SUB_RESPONSE_SUBSCRIPTION_KEY,
+  PUB_SUB_CHANNEL_NAME,
   REQ_REP_CHANNEL_NAME,
-} from "./constants";
+  type TestMsg,
+} from "./types";
 
-PubSubChannel.for(PUB_SUB_REQUEST_SUBSCRIPTION_KEY, {
+PubSubChannel.for<TestMsg>(PUB_SUB_CHANNEL_NAME, {
   broadcast: true,
 }).subscribe((_) => {
-  PubSubChannel.broadcast(
-    PUB_SUB_RESPONSE_SUBSCRIPTION_KEY,
-    { payload: "response" }
-  );
+  PubSubChannel.broadcast(PUB_SUB_CHANNEL_NAME, {
+    payload: "response",
+  });
 });
 
 ReqRepChannel.for<{ payload: string }, { payload: string }>(
