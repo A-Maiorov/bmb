@@ -16,6 +16,7 @@ export interface IPubSubChannel<TMsg> extends IChannel {
   getState: () => TMsg | undefined;
   nextMessage: () => Promise<TMsg>;
   type: "pubSub";
+  senderId: string;
 }
 
 export interface IReqRepChannel<TReq = unknown, TRep = unknown>
@@ -23,6 +24,7 @@ export interface IReqRepChannel<TReq = unknown, TRep = unknown>
   request: (msg: TReq, targetId?: string) => Promise<TRep | undefined>;
   reply: (handler: (req: TReq) => TRep) => Disposer;
   type: "reqRep";
+  senderId: string;
 }
 
 export interface Subscription<T> {
@@ -49,7 +51,7 @@ export interface IBroker {
   state: Map<string, any>;
   subscribers: Map<string, THandler[]>;
   requestListeners: Map<string, ReqSubscription>;
-
+  senderId: string;
   trace: boolean;
   traceBroadcasts: boolean;
   traceMessages: boolean;
@@ -91,7 +93,7 @@ export interface IBroker {
   ): ReqSubscription;
 }
 
-export type ChannelType = "pubSub" | "req" | "rep" | "sync";
+export type ChannelType = "pubSub" | "req" | "rep"; // | "sync";
 export interface IBroadcastEnvelope<T = any> {
   senderId: string;
   targetId?: string;
@@ -101,18 +103,19 @@ export interface IBroadcastEnvelope<T = any> {
   channelType: ChannelType;
 }
 
-export interface IBrokerState {
-  id: string;
-  broadcasts: string[];
-  availableState: { [x: string]: any };
-  reqAwaiters: { channelName: string; requestData: unknown }[];
-}
+// export interface IBrokerState {
+//   id: string;
+//   broadcasts: string[];
+//   availableState: { [x: string]: any };
+//   reqAwaiters: { channelName: string; requestData: unknown }[];
+// }
 
-export interface IBroadcastSyncEnvelope
-  extends IBroadcastEnvelope<IBrokerState> {
-  channelName: "broadcast-sync";
-  msg: IBrokerState;
-}
+// export interface IBroadcastSyncEnvelope
+//   extends IBroadcastEnvelope<IBrokerState> {
+//   channelName: "broadcast-sync";
+//   msg: IBrokerState;
+// }
+
 declare global {
   var BrowserMessageBroker: IBroker;
 }

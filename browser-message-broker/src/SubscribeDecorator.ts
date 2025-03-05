@@ -20,23 +20,17 @@ export function subscribe<T>(channel: PubSubChannel<T>) {
       ctor["__bmbSubscriptionsDisposers"] === undefined
     )
       Object.assign(ctor as any, {
-        __bmbSubscriptionsDisposers: new Map<
-          string,
-          Function
-        >(),
+        __bmbSubscriptionsDisposers: new Map<string, Function>(),
         __bmbChannels: [],
         connectedCallback: function () {
           origConnCbk?.bind(this)();
 
-          for (let c of this
-            .__bmbChannels as channelsCollection) {
+          for (let c of this.__bmbChannels as channelsCollection) {
             //@ts-ignore
             const handler = this[c.handlerName].bind(this);
 
             this.__bmbSubscriptionsDisposers.set(
-              `${
-                c.channel.name
-              }-${c.handlerName.toString()}`,
+              `${c.channel.name}-${c.handlerName.toString()}`,
               c.channel.subscribe(handler as THandler<T>)
             );
           }

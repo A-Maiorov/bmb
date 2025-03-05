@@ -1,16 +1,9 @@
 import { BMB } from "./Broker";
-import {
-  Disposer,
-  ChannelSettings,
-  IPubSubChannel,
-  THandler,
-} from "./Types";
+import { Disposer, ChannelSettings, IPubSubChannel, THandler } from "./Types";
 
 const pubSubChannels = new Map<string, PubSubChannel>();
 
-export class PubSubChannel<TMsg = any>
-  implements IPubSubChannel<TMsg>
-{
+export class PubSubChannel<TMsg = any> implements IPubSubChannel<TMsg> {
   static for<TMsg>(
     name: string,
     settings?: ChannelSettings
@@ -32,22 +25,16 @@ export class PubSubChannel<TMsg = any>
     return channel;
   }
 
-  private constructor(
-    name: string,
-    settings: ChannelSettings
-  ) {
+  private constructor(name: string, settings: ChannelSettings) {
     this.name = name;
     this.settings = settings;
   }
+  senderId = BMB.senderId;
 
   async send(msg: TMsg, targetId?: string): Promise<void> {
     BMB.Publish(this.name, msg, targetId);
   }
-  static async publish<TMsg = any>(
-    name: string,
-    msg: TMsg,
-    targetId?: string
-  ) {
+  static async publish<TMsg = any>(name: string, msg: TMsg, targetId?: string) {
     BMB.Publish(name, msg, targetId);
   }
   static async broadcast<TMsg = any>(

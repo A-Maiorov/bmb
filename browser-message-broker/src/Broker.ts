@@ -1,48 +1,52 @@
+import { BmbLock } from "./Lock";
 import {
   ChannelType,
   IBroadcastEnvelope,
-  IBroadcastSyncEnvelope,
+  //IBroadcastSyncEnvelope,
   IBroker,
-  IBrokerState,
+  //IBrokerState,
   ChannelSettings,
   ReqSubscription,
   Subscription,
   THandler,
 } from "./Types";
 
-const BROADCAST_SYNC = "broadcast-sync";
+//const BROADCAST_SYNC = "broadcast-sync";
 const BROWSER_MESSAGE_BROKER = "browser-message-broker";
 
-function isBroadcastSync(e: IBroadcastEnvelope): e is IBroadcastSyncEnvelope {
-  return e.channelName === BROADCAST_SYNC;
-}
+// function isBroadcastSync(e: IBroadcastEnvelope): e is IBroadcastSyncEnvelope {
+//   return e.channelName === BROADCAST_SYNC;
+// }
 
-function isSyncReq(e: IBroadcastEnvelope) {
-  return e.senderId != undefined && e.targetId == undefined;
-}
-function isSyncResp(e: IBroadcastEnvelope) {
-  return e.senderId != undefined && e.targetId != undefined;
-}
+// function isSyncReq(e: IBroadcastEnvelope) {
+//   return e.senderId != undefined && e.targetId == undefined;
+// }
+// function isSyncResp(e: IBroadcastEnvelope) {
+//   return e.senderId != undefined && e.targetId != undefined;
+// }
 
-export const senderId = Math.random().toString(36).substring(2, 9);
+const _senderId = Math.random().toString(36).substring(2, 9);
 
-function debounce<T extends Function>(func: T, timeout = 1) {
-  let timer: number;
-  return (...args: unknown[]) => {
-    clearTimeout(timer);
-    timer = setTimeout(() => {
-      func(...args);
-    }, timeout);
-  };
-}
+// function debounce<T extends Function>(func: T, timeout = 1) {
+//   let timer: Timer;
+
+//   return (...args: unknown[]) => {
+//     clearTimeout(timer);
+//     timer = setTimeout(() => {
+//       func(...args);
+//     }, timeout);
+//   };
+// }
 
 const channelSettings = new Map<string, ChannelSettings>();
 
 class Broker implements IBroker {
+  syncLock = new BmbLock(BROWSER_MESSAGE_BROKER + "-sync-lock");
+
   trace: boolean = false;
   traceBroadcasts: boolean = false;
   traceMessages: boolean = false;
-  senderId = senderId;
+  senderId = _senderId;
   state = new Map<string, any>();
   subscribers = new Map<string, THandler[]>();
   broadcasts = new Set<string>();
@@ -69,11 +73,13 @@ class Broker implements IBroker {
     this.__bcChannel.onmessage = this.handleBroadcast.bind(this);
     this.__bcChannel.onmessageerror = this.handleBroadcastError.bind(this);
 
-    setTimeout(() => {
-      this.__sendBrokerState(undefined, undefined); // always send initial sync request
-    }, 0);
+    this.syncLock.canSync.then((x) => console.log("can sync: " + x));
 
-    this.sendBrokerState = debounce(this.__sendBrokerState.bind(this), 2);
+    // setTimeout(() => {
+    //   this.__sendBrokerState(undefined, undefined); // always send initial sync request
+    // }, 0);
+
+    //this.sendBrokerState = debounce(this.__sendBrokerState.bind(this), 2);
   }
 
   ConfigureChannel(
@@ -97,94 +103,94 @@ class Broker implements IBroker {
     throw Error("BROADCAST FAILED: " + ev.data);
   }
 
-  private sendBrokerState: (
-    targetId?: string,
-    filterBroadcasts?: string[]
-  ) => void;
-  private __sendBrokerState(targetId?: string, filterBroadcasts?: string[]) {
-    let currentBroadcasts = Array.from(this.broadcasts.keys());
+  // private sendBrokerState: (
+  //   targetId?: string,
+  //   filterBroadcasts?: string[]
+  // ) => void;
+  // private __sendBrokerState(targetId?: string, filterBroadcasts?: string[]) {
+  //   let currentBroadcasts = Array.from(this.broadcasts.keys());
 
-    if (filterBroadcasts && filterBroadcasts.length > 0) {
-      currentBroadcasts = currentBroadcasts.filter((k) =>
-        filterBroadcasts.includes(k)
-      );
-    }
+  //   if (filterBroadcasts && filterBroadcasts.length > 0) {
+  //     currentBroadcasts = currentBroadcasts.filter((k) =>
+  //       filterBroadcasts.includes(k)
+  //     );
+  //   }
 
-    const availableState: { [x: string]: any } = {};
-    for (const x of this.state) {
-      if (!x[1]) continue;
-      if (!currentBroadcasts.includes(x[0])) continue;
-      availableState[x[0]] = x[1];
-    }
+  //   const availableState: { [x: string]: any } = {};
+  //   for (const x of this.state) {
+  //     if (!x[1]) continue;
+  //     if (!currentBroadcasts.includes(x[0])) continue;
+  //     availableState[x[0]] = x[1];
+  //   }
 
-    const state: IBrokerState = {
-      id: senderId,
-      availableState,
-      broadcasts: currentBroadcasts,
-      reqAwaiters: Array.from(this.broadcastedRequests.entries()).map((x) => ({
-        channelName: x[0],
-        requestData: x[1].requestData,
-      })),
-    };
+  //   const state: IBrokerState = {
+  //     id: senderId,
+  //     availableState,
+  //     broadcasts: currentBroadcasts,
+  //     reqAwaiters: Array.from(this.broadcastedRequests.entries()).map((x) => ({
+  //       channelName: x[0],
+  //       requestData: x[1].requestData,
+  //     })),
+  //   };
 
-    const ev: IBroadcastSyncEnvelope = {
-      channelName: BROADCAST_SYNC,
-      senderCtx: globalThis.constructor.name,
-      senderId,
-      targetId,
-      msg: state,
-      channelType: "sync",
-    };
+  //   const ev: IBroadcastSyncEnvelope = {
+  //     channelName: BROADCAST_SYNC,
+  //     senderCtx: globalThis.constructor.name,
+  //     senderId,
+  //     targetId,
+  //     msg: state,
+  //     channelType: "sync",
+  //   };
 
-    this.__bcChannel.postMessage(ev);
+  //   this.__bcChannel.postMessage(ev);
 
-    if (targetId == undefined)
-      this.log("Broadcast sync requested", "", {
-        brokerState: state,
-      });
-    else
-      this.log("Broadcast sync responded", "", {
-        targetId,
-        brokerState: state,
-      });
-  }
+  //   if (targetId == undefined)
+  //     this.log("Broadcast sync requested", "", {
+  //       brokerState: state,
+  //     });
+  //   else
+  //     this.log("Broadcast sync responded", "", {
+  //       targetId,
+  //       brokerState: state,
+  //     });
+  // }
 
-  private handleBroadcastSync(ev: IBroadcastSyncEnvelope) {
-    if (isSyncReq(ev))
-      return this.sendBrokerState(ev.senderId, ev.msg.broadcasts);
-    if (isSyncResp(ev)) {
-      for (const s of Object.entries(ev.msg.availableState)) {
-        if (
-          this.broadcasts.has(s[0]) &&
-          this.state.has(s[0]) &&
-          this.state.get(s[0]) == undefined &&
-          !this.activeNotifications.has(s[0])
-        ) {
-          this.__notifySubscribers(s[0], s[1], ev.senderId);
-        }
-      }
-      for (const s of ev.msg.reqAwaiters) {
-        if (
-          this.requestListeners.has(s.channelName) &&
-          this.broadcasts.has(s.channelName)
-        ) {
-          const reqListener = this.requestListeners.get(s.channelName);
-          reqListener?.handler(s.requestData, ev.senderId);
-        }
-      }
-      this.log("Broadcast sync response received", "", ev.msg);
-    }
-  }
+  // private handleBroadcastSync(ev: IBroadcastSyncEnvelope) {
+  //   if (isSyncReq(ev))
+  //     return this.sendBrokerState(ev.senderId, ev.msg.broadcasts);
+  //   if (isSyncResp(ev)) {
+  //     for (const s of Object.entries(ev.msg.availableState)) {
+  //       if (
+  //         this.broadcasts.has(s[0]) &&
+  //         this.state.has(s[0]) &&
+  //         this.state.get(s[0]) == undefined &&
+  //         !this.activeNotifications.has(s[0])
+  //       ) {
+  //         this.__notifySubscribers(s[0], s[1], ev.senderId);
+  //       }
+  //     }
+  //     for (const s of ev.msg.reqAwaiters) {
+  //       if (
+  //         this.requestListeners.has(s.channelName) &&
+  //         this.broadcasts.has(s.channelName)
+  //       ) {
+  //         const reqListener = this.requestListeners.get(s.channelName);
+  //         reqListener?.handler(s.requestData, ev.senderId);
+  //       }
+  //     }
+  //     this.log("Broadcast sync response received", "", ev.msg);
+  //   }
+  // }
 
   private handleBroadcast(ev: MessageEvent<IBroadcastEnvelope>) {
     this.log("Broadcast received", ev.data.channelName, ev.data);
 
-    if (ev.data.targetId != undefined && ev.data.targetId !== senderId) {
+    if (ev.data.targetId != undefined && ev.data.targetId !== this.senderId) {
       this.log("Broadcast ignored (different targetId)", ev.data.channelName);
       return;
     }
 
-    if (isBroadcastSync(ev.data)) return this.handleBroadcastSync(ev.data);
+    // if (isBroadcastSync(ev.data)) return this.handleBroadcastSync(ev.data);
 
     switch (ev.data.channelType) {
       case "pubSub":
@@ -223,11 +229,10 @@ class Broker implements IBroker {
     const originalDispose = subscription.dispose;
     subscription.dispose = () => {
       originalDispose();
-      this.broadcasts.delete(subscription.channelName);
     };
     subscription.isBroadcast = true;
 
-    this.sendBrokerState();
+    //this.sendBrokerState();
   }
 
   GetState<T>(subsKey: string): T | undefined {
@@ -260,7 +265,7 @@ class Broker implements IBroker {
     const envelope: IBroadcastEnvelope = {
       channelName: channelName,
       senderCtx: globalThis.constructor.name,
-      senderId: senderId,
+      senderId: this.senderId,
       targetId: targetId,
       msg: _msg,
       channelType,
@@ -273,7 +278,7 @@ class Broker implements IBroker {
 
   async Publish(channelName: string, msg: unknown, targetId?: string) {
     this.log(`Message published`, channelName, { message: msg });
-    await this.__notifySubscribers(channelName, msg, senderId);
+    await this.__notifySubscribers(channelName, msg, this.senderId);
 
     if (!this.broadcasts.has(channelName)) return;
 
