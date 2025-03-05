@@ -23,7 +23,7 @@ jobs:
         working-directory: browser-message-broker
       - run: bun run build
         working-directory: browser-message-broker
-      - run: pnpm i
+      - run: bun i
         working-directory: tests
       - name: Install dependencies for Playwright
         run: bun run playwright install --with-deps
