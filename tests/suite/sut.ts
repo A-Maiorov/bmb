@@ -1,15 +1,38 @@
-import { PubSubChannel } from "browser-message-broker";
+import { PubSubChannel, ReqRepChannel } from "browser-message-broker";
 import type { ChannelSettings } from "browser-message-broker/dist/Types";
 import { SutWorkerFacade } from "./sutWorkerFacade";
 
 const psChannels = new Map<string, PubSubChannel>();
+const rrChannels = new Map<string, ReqRepChannel>();
 
 const nextMessagePromises = new Map<string, Promise<any>>();
 
 const subscriptionValue = new Map<string, unknown>();
+const requestValue = new Map<string, unknown>();
+
+function idle(ms: number) {
+  return new Promise<void>((resolve) => setTimeout(() => resolve(), ms));
+}
 
 const sut = {
   setup: {
+    reply(
+      name: string,
+      settings: ChannelSettings,
+      replyValue: unknown,
+      delayMs: number = 0
+    ) {
+      const rr = ReqRepChannel.for(name, settings);
+      rrChannels.set(name, rr);
+      rr.reply(async (req) => {
+        await idle(delayMs);
+        requestValue.set(name, req);
+        return replyValue;
+      });
+    },
+    request(name: string, settings: ChannelSettings) {
+      rrChannels.set(name, ReqRepChannel.for(name, settings));
+    },
     channel(name: string, settings?: ChannelSettings) {
       psChannels.set(name, PubSubChannel.for(name, settings));
     },
@@ -72,6 +95,13 @@ const sut = {
           throw new Error(`Channel "${name}" is not configured`);
         }
         await ch.send(x);
+      },
+      async sendRequest(x: unknown): Promise<any> {
+        const ch = rrChannels.get(name);
+        if (ch == undefined) {
+          throw new Error(`Channel "${name}" is not configured`);
+        }
+        return await ch.request(x);
       },
     };
   },

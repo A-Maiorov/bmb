@@ -7,7 +7,8 @@ export interface Fix {
   Given: <TArg, TRes>(
     name: string,
     fn: (arg?: TArg) => TRes | Promise<TRes>,
-    arg?: TArg
+    arg?: TArg,
+    page?: string
   ) => Promise<TRes>;
   /**
    * Runs in browser
@@ -15,7 +16,8 @@ export interface Fix {
   When: <TArg, TRes>(
     name: string,
     fn: (arg?: TArg) => TRes | Promise<TRes>,
-    arg?: TArg
+    arg?: TArg,
+    page?: string
   ) => Promise<TRes>;
   /**
    * Runs in test runner
@@ -23,24 +25,58 @@ export interface Fix {
   Then: <TRes>(name: string, fn: () => TRes) => Promise<TRes>;
 }
 
+async function getPage(context: BrowserContext, pageName: string = "Main") {
+  let page = context.pages().find((x) => {
+    const p = x as Page & { id?: string };
+    return p.id === pageName;
+  });
+
+  if (page == undefined) {
+    page = await context.newPage();
+    await initFixture(page, pageName);
+  }
+
+  return page;
+}
+
 const _scenario = test.extend<Fix>({
-  Given: async ({ page }, use) => {
-    const fix = getSutEvalFunc(page);
-    await use(async (name: string, fn: () => any, arg: unknown) => {
-      return await test.step("Given: " + name, () => fix(fn, arg), {
-        box: true,
-        timeout: 2000,
-      });
-    });
+  Given: async ({ context }, use) => {
+    await use(
+      async (name: string, fn: () => any, arg?: unknown, pageName?: string) => {
+        return await test.step(
+          "Given: " + name,
+          async () => {
+            const p = await getPage(context, pageName);
+            const fix = getSutEvalFunc(p);
+
+            return fix(fn, arg);
+          },
+          {
+            box: true,
+            timeout: 2000,
+          }
+        );
+      }
+    );
   },
-  When: async ({ page }, use) => {
-    const fix = getSutEvalFunc(page);
-    await use(async (name: string, fn: () => any, arg: unknown) => {
-      return await test.step("When: " + name, () => fix(fn, arg), {
-        box: true,
-        timeout: 2000,
-      });
-    });
+  When: async ({ context }, use) => {
+    await use(
+      async (name: string, fn: () => any, arg?: unknown, pageName?: string) => {
+        return await test.step(
+          "When: " + name,
+          async () => {
+            const p = await getPage(context, pageName);
+            const fix = getSutEvalFunc(p);
+
+            return await fix(fn, arg);
+          },
+          {
+            box: true,
+            timeout: 2000,
+          }
+        );
+      }
+    );
   },
   Then: async ({}, use) => {
     await use(async <T>(name: string, fn: () => T) => {
@@ -54,22 +90,44 @@ const _scenario = test.extend<Fix>({
 
 export const Scenario = _scenario;
 
-export async function initFixture(page: Page) {
-  return await test.step("Init SUT fixture", async () => {
-    await page.goto("http://localhost:3000");
-    await page.evaluate(() => {
-      BrowserMessageBroker.traceBroadcasts = true;
-      BrowserMessageBroker.traceMessages = true;
-      BrowserMessageBroker.senderId = "UI";
-    });
-  });
+export async function initFixture(
+  page: Page & { id?: string },
+  pageName: string = "Main"
+) {
+  await Scenario.step(
+    "Init test page " + (pageName ?? ""),
+    async () => {
+      page.id = pageName;
+      await page.goto("http://localhost:3000");
+      console.log("nav");
+      await page.evaluate((pn) => {
+        BrowserMessageBroker.traceBroadcasts = true;
+        BrowserMessageBroker.traceMessages = true;
+        BrowserMessageBroker.senderId = pn;
+      }, pageName);
+      console.log("eval");
+    },
+    {
+      box: true,
+    }
+  );
 }
 
-export function getSutEvalFunc(page: Page) {
+export function getSutEvalFunc(page: Page & { id?: string }) {
   return async <TArg, TRes>(
     fn: (arg?: TArg) => TRes | Promise<TRes>,
     arg?: TArg
   ) => {
-    return await page.evaluate<TRes, any>(fn, arg);
+    const fnStr = fn.toString();
+
+    return Scenario.step(
+      `Run on test page ${page.id}: ` + fnStr,
+      async () => {
+        return await page.evaluate<TRes, any>(fn, arg);
+      },
+      {
+        box: true,
+      }
+    );
   };
 }

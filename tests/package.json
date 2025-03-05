@@ -5,7 +5,9 @@
   "main": "",
   "type": "module",
   "scripts": {
-    "start": "bun i --cwd ../browser-message-broker && bun --cwd ../browser-message-broker build.ts && pnpm i && node buildTestSuite.cjs"
+    "test": "npx playwright test",
+    "build": "bun i --cwd ../browser-message-broker && bun --cwd ../browser-message-broker build.ts",
+    "start": "bun run build && bun buildTestSuite.js"
   },
   "license": "MIT",
   "private": true,
@@ -14,8 +16,8 @@
   },
   "devDependencies": {
     "@playwright/test": "1.50.1",
-    "@types/node": "22.13.1",
-    "typescript": "5.7.3",
+    "@types/node": "22.13.9",
+    "typescript": "5.8.2",
     "esbuild": "0.25.0"
   }
 }

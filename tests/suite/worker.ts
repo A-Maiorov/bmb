@@ -17,6 +17,27 @@ self.onmessage = async (ev) => {
   }
 
   switch (cmd.command) {
+    case "setup.reply": {
+      SUT.setup.reply(
+        cmd.channelName,
+        cmd.args.settings,
+        cmd.args.replyValue,
+        cmd.args.delayMs
+      );
+      self.postMessage({
+        command: `${cmd.channelName}:${cmd.command}`,
+        timestamp: cmd.timestamp,
+      } as ISutWorkerResponse);
+      break;
+    }
+    case "setup.request": {
+      SUT.setup.request(cmd.channelName, cmd.args.settings);
+      self.postMessage({
+        command: `${cmd.channelName}:${cmd.command}`,
+        timestamp: cmd.timestamp,
+      } as ISutWorkerResponse);
+      break;
+    }
     case "setup.channel": {
       SUT.setup.channel(cmd.channelName, cmd.args.settings);
       self.postMessage({
@@ -57,6 +78,15 @@ self.onmessage = async (ev) => {
     }
     case "channel.sendMessage": {
       SUT.channel(cmd.channelName).sendMessage(cmd.args);
+      break;
+    }
+    case "channel.sendRequest": {
+      const data = SUT.channel(cmd.channelName).sendRequest(cmd.args);
+      self.postMessage({
+        command: `${cmd.channelName}:${cmd.command}`,
+        timestamp: cmd.timestamp,
+        data,
+      } as ISutWorkerResponse);
       break;
     }
   }

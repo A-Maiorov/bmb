@@ -12,6 +12,11 @@ export interface ISutWorkerCommand {
         name: string;
         settings: ChannelSettings;
       }
+    | {
+        name: string;
+        settings: ChannelSettings;
+        replyValue: unknown;
+      }
     | any;
 }
 export interface ISutWorkerResponse {
@@ -156,6 +161,27 @@ export class SutWorkerFacade implements TestSuite {
 
     channelSubscription: (channelName: string, subscriptionName: string) => "",
 
+    request: (name: string, settings?: ChannelSettings) =>
+      this.sendCommand({
+        command: "setup.request",
+        timestamp: Date.now(),
+        channelName: name,
+        args: { name, settings },
+      } as ISutWorkerCommand),
+
+    reply: (
+      name: string,
+      settings: ChannelSettings,
+      replyValue: unknown,
+      delayMs: number = 0
+    ) =>
+      this.sendCommand({
+        command: "setup.reply",
+        timestamp: Date.now(),
+        channelName: name,
+        args: { name, settings, replyValue, delayMs },
+      } as ISutWorkerCommand),
+
     nextMessagePromiseForChannel: (name: string) =>
       this.sendCommand({
         command: "setup.nextMessagePromise",
@@ -186,6 +212,14 @@ export class SutWorkerFacade implements TestSuite {
       sendMessage: (x: never) =>
         this.sendCommand({
           command: "channel.sendMessage",
+          timestamp: Date.now(),
+          channelName: name,
+          args: x,
+        }),
+
+      sendRequest: (x: never) =>
+        this.sendCommand({
+          command: "channel.sendRequest",
           timestamp: Date.now(),
           channelName: name,
           args: x,

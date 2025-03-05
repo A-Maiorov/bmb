@@ -1,3 +1,4 @@
+import { BmbLock } from "./Lock";
 import {
   ChannelType,
   IBroadcastEnvelope,
@@ -24,7 +25,7 @@ const BROWSER_MESSAGE_BROKER = "browser-message-broker";
 //   return e.senderId != undefined && e.targetId != undefined;
 // }
 
-export const senderId = Math.random().toString(36).substring(2, 9);
+const _senderId = Math.random().toString(36).substring(2, 9);
 
 // function debounce<T extends Function>(func: T, timeout = 1) {
 //   let timer: Timer;
@@ -40,10 +41,12 @@ export const senderId = Math.random().toString(36).substring(2, 9);
 const channelSettings = new Map<string, ChannelSettings>();
 
 class Broker implements IBroker {
+  syncLock = new BmbLock(BROWSER_MESSAGE_BROKER + "-sync-lock");
+
   trace: boolean = false;
   traceBroadcasts: boolean = false;
   traceMessages: boolean = false;
-  senderId = senderId;
+  senderId = _senderId;
   state = new Map<string, any>();
   subscribers = new Map<string, THandler[]>();
   broadcasts = new Set<string>();
@@ -69,6 +72,8 @@ class Broker implements IBroker {
   constructor() {
     this.__bcChannel.onmessage = this.handleBroadcast.bind(this);
     this.__bcChannel.onmessageerror = this.handleBroadcastError.bind(this);
+
+    this.syncLock.canSync.then((x) => console.log("can sync: " + x));
 
     // setTimeout(() => {
     //   this.__sendBrokerState(undefined, undefined); // always send initial sync request
@@ -180,7 +185,7 @@ class Broker implements IBroker {
   private handleBroadcast(ev: MessageEvent<IBroadcastEnvelope>) {
     this.log("Broadcast received", ev.data.channelName, ev.data);
 
-    if (ev.data.targetId != undefined && ev.data.targetId !== senderId) {
+    if (ev.data.targetId != undefined && ev.data.targetId !== this.senderId) {
       this.log("Broadcast ignored (different targetId)", ev.data.channelName);
       return;
     }
@@ -260,7 +265,7 @@ class Broker implements IBroker {
     const envelope: IBroadcastEnvelope = {
       channelName: channelName,
       senderCtx: globalThis.constructor.name,
-      senderId: senderId,
+      senderId: this.senderId,
       targetId: targetId,
       msg: _msg,
       channelType,
@@ -273,7 +278,7 @@ class Broker implements IBroker {
 
   async Publish(channelName: string, msg: unknown, targetId?: string) {
     this.log(`Message published`, channelName, { message: msg });
-    await this.__notifySubscribers(channelName, msg, senderId);
+    await this.__notifySubscribers(channelName, msg, this.senderId);
 
     if (!this.broadcasts.has(channelName)) return;
 

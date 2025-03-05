@@ -3,6 +3,7 @@ import { initFixture, Scenario } from "../../suite/sutFixture";
 
 Scenario.beforeEach(async ({ page }) => {
   await initFixture(page);
+  console.log("done");
 });
 
 //Scenario.describe("Same scripting context", () => {

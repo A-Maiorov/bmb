@@ -17,22 +17,18 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v3
         with:
-          node-version: 20
-      - run: npm install -g pnpm
-      - run: pnpm i
+          node-version: 22
+      - run: npm install -g bun
+      - run: bun i
         working-directory: browser-message-broker
-      - run: pnpm run build --if-present
-        working-directory: browser-message-broker
-      - run: pnpm link --global
+      - run: bun run build
         working-directory: browser-message-broker
       - run: pnpm i
         working-directory: tests
       - name: Install dependencies for Playwright
-        run: pnpm exec playwright install --with-deps
+        run: bun run playwright install --with-deps
         working-directory: tests
-      - run: pnpm link --global browser-message-broker
+      - run: bun run build
         working-directory: tests
-      - run: pnpm build --if-present
-        working-directory: tests
-      - run: pnpm test
+      - run: bun run playwright test
         working-directory: tests
